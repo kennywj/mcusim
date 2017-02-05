@@ -1,2 +1,4 @@
 *.o
 *.d
+u2w
+FreeRTOS_Posix

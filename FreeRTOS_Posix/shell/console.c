@@ -224,6 +224,8 @@ void do_console(void *parm)
        	                cmd++;
 			        if (do_command(cmd)<0)
 			            printf("unknown command '%s'\n", cmd);
+			        if (do_exit)
+			            break;  // exit while loop
 			    }
 			    memset(cmdbuf,0,256);
 			    count=0;
@@ -261,5 +263,6 @@ void do_console(void *parm)
 end_console:    
     printf("exit shell service\n");  
     //reset_input_mode();
-    vTaskDelete(NULL);
+    vTaskEndScheduler();
+    //vTaskDelete(NULL);
 }   //do_console
