@@ -31,7 +31,10 @@ void cmd_help(int argc, char* argv[])
 void cmd_quit(int argc, char* argv[])
 {
     extern int do_exit;
+    extern void exit_u2w(void);
+
     do_exit = 1; // user exit
+    exit_u2w();
 }
 
 

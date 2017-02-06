@@ -19,6 +19,7 @@ RM := rm -rf
 -include AsyncIO/subdir.mk
 -include shell/subdir.mk
 -include uart2wifi/subdir.mk
+-include lwip/subdir_api.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
