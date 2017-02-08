@@ -36,6 +36,13 @@ typedef uintptr_t          mem_ptr_t;
 #define PACK_STRUCT_FIELD(fld) fld
 #define ALIGNED(n)  __align(n)
 
+#elif defined (__GCC_POSIX__)
+
+#define PACK_STRUCT_BEGIN
+#define PACK_STRUCT_STRUCT __attribute__ ((__packed__))
+#define PACK_STRUCT_END
+#define PACK_STRUCT_FIELD(x) x
+
 #endif
 
 #endif

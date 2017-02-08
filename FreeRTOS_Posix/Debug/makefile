@@ -20,6 +20,10 @@ RM := rm -rf
 -include shell/subdir.mk
 -include uart2wifi/subdir.mk
 -include lwip/subdir_api.mk
+-include lwip/subdir_core.mk
+-include lwip/subdir_ipv4.mk
+-include lwip/subdir_ipv6.mk
+-include lwip/subdir_if.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
