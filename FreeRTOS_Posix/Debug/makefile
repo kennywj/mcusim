@@ -24,6 +24,7 @@ RM := rm -rf
 -include lwip/subdir_ipv4.mk
 -include lwip/subdir_ipv6.mk
 -include lwip/subdir_if.mk
+-include port/subdir_port.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

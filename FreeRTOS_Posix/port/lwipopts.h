@@ -33,9 +33,9 @@
 #define LWIP_HDR_LWIPOPTS_H__
 
 /* Prevent having to link sys_arch.c (we don't test the API layers in unit tests) */
-#define NO_SYS                          1
+#define NO_SYS                          0
 #define LWIP_NETCONN                    0
-#define LWIP_SOCKET                     0
+#define LWIP_SOCKET                     1
 #define SYS_LIGHTWEIGHT_PROT            0
 
 #define LWIP_IPV6                       1
@@ -64,5 +64,11 @@
 
 /* Minimal changes to opt.h required for etharp unit tests: */
 #define ETHARP_SUPPORT_STATIC_ENTRIES   1
+
+//
+// kenny's define
+//
+#define LWIP_TIMEVAL_PRIVATE        0
+
 
 #endif /* LWIP_HDR_LWIPOPTS_H__ */
