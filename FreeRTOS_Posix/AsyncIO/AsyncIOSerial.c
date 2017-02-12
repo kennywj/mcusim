@@ -25,6 +25,7 @@ long lReturn = pdFALSE;
 	iSerialDevice = open( pcDevice, O_RDWR | O_NOCTTY | O_NONBLOCK );
 	if ( iSerialDevice < 0 )
 	{
+	    printf("Open device %s fail, errno=%d\n",pcDevice, errno);
 		lReturn = pdFALSE;
 	}
 	else

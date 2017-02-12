@@ -251,8 +251,6 @@ void cmd_on(int argc, char* argv[])
 	        tskIDLE_PRIORITY + 4, &hSerialTask );
 	    u2w_on = 1;    
     }    
-    else
-        printf("Open device %s fail\n",devname);
 }
     
 //
@@ -266,7 +264,7 @@ void cmd_on(int argc, char* argv[])
 void cmd_off(int argc, char* argv[])
 {
 	u2w_on = 0;    
-    printf("has not implement %s",__FUNCTION__);
+    printf("has not implement %s\n",__FUNCTION__);
 }
     
 //
