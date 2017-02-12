@@ -130,13 +130,14 @@
 #define SHELL_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 const char *software_version="uart2wifi v0.0.1";
 extern void do_console( void * pvParameters );
-static void SerialTaskHook( void * pvParameters );
+static void SysInitHook( void * pvParameters );
 
+extern void LwIP_Init(void);
 /*-----------------------------------------------------------*/
 
 int main( void )
 {
-    xTaskHandle hShellTask, hSerialTask;
+    xTaskHandle hShellTask, hInitTask;
 	/* Initialise hardware and utilities. */
 	vParTestInitialise();
 	vPrintInitialise();
@@ -146,8 +147,8 @@ int main( void )
 	/* Create a Task which waits to receive from STDIN and sent to consle thread to handle it as the command sting. */
 	xTaskCreate( do_console, "Shell", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &hShellTask );
 
-	/* Create a Task which waits to receive bytes. */
-	//xTaskCreate( SerialTaskHook, "SerialRx", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 4, &hSerialTask );
+	/* Create a Task which waits to do system init. */
+	xTaskCreate( SysInitHook, "SysInit", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 4, &hInitTask );
 
 	/* Set the scheduler running.  This function will not return unless a task calls vTaskEndScheduler(). */
 	vTaskStartScheduler();
@@ -156,17 +157,14 @@ int main( void )
 }
 
 /*-----------------------------------------------------------*/
-
-void SerialTaskHook( void *pvParameters )
+void SysInitHook( void *pvParameters )
 {
-    int count = 0;
+    // do Lwip init
+    LwIP_Init();
+    // do application initial
     
-    printf("%s: start\n",__FUNCTION__);
-    while(1)
-    {
-        vTaskDelay(1000);
-        printf("%s: count=%d\n",__FUNCTION__, ++count);
-    }
+    // Kill init thread after all init tasks done
+	vTaskDelete(NULL);
 }
 
 /*-----------------------------------------------------------*/

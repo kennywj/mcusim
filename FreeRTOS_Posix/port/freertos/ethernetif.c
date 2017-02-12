@@ -65,11 +65,9 @@
 /* The time to block waiting for input. */
 #define emacBLOCK_TIME_WAITING_FOR_INPUT	( ( portTickType ) 100 )
 
-
-#ifdef CONFIG_CONCURRENT_MODE
-#define IF2NAME0 'r'
-#define IF2NAME1 '2'
-#endif
+// interface name
+#define IFNAME0 'u'
+#define IFNAME1 '0'
 
 static void arp_timer(void *arg);
 
@@ -84,7 +82,14 @@ static void arp_timer(void *arg);
 
 static void low_level_init(struct netif *netif)
 {
-
+    /* (We just fake an address...) */
+    netif->hwaddr[0] = 0x02;
+    netif->hwaddr[1] = 0x12;
+    netif->hwaddr[2] = 0x34;
+    netif->hwaddr[3] = 0x56;
+    netif->hwaddr[4] = 0x78;
+    netif->hwaddr[5] = 0xab;
+  
 	/* set netif MAC hardware address length */
 	netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
@@ -92,7 +97,7 @@ static void low_level_init(struct netif *netif)
 	netif->mtu = 1500;
 
 	/* Accept broadcast address and ARP traffic */
-	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;	     
+	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;	     
 
 	/* Wlan interface is initialized later */
 }
@@ -214,18 +219,10 @@ err_t ethernetif_init(struct netif *netif)
 {
 	LWIP_ASSERT("netif != NULL", (netif != NULL));
 
-#if LWIP_NETIF_HOSTNAME
-	/* Initialize interface hostname */
-	if(netif->name[1] == '0')
-		netif->hostname = "lwip0";
-	else if(netif->name[1] == '1')
-		netif->hostname = "lwip1";
-#endif /* LWIP_NETIF_HOSTNAME */
-
+    netif->name[0] = IFNAME0;
+    netif->name[1] = IFNAME1;
+    
 	netif->output = etharp_output;
-//#if LWIP_IPV6
-//	netif->output_ip6 = ethip6_output;
-//#endif
 	netif->linkoutput = low_level_output;
 
 	/* initialize the hardware */

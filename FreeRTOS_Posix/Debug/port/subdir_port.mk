@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../port/freertos/ethernetif.c \
+../port/freertos/network.c \
 ../port/freertos/sys_arch.c
 
 OBJS += \
 ./port/ethernetif.o \
+./port/network.o    \
 ./port/sys_arch.o
 
 C_DEPS += \
 ./port/ethernetif.d \
+./port/network.d    \
 ./port/sys_arch.d
 
 
