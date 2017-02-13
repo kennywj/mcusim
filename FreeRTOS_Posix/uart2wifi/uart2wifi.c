@@ -203,6 +203,24 @@ void uart_tx_process(char type, int len, char *data)
 }
 
 //
+//  function: exit_u2w
+//      do exit of uart2wifi module
+//  parameters:
+//      none
+//  return:
+//      none
+//
+void exit_u2w()
+{
+    if (u2w_on)
+    {
+        close(iSerialReceive);
+        printf("Close %s!",devname);
+        iSerialReceive = 0;
+    }
+}
+
+//
 //  function: cmd_stat
 //      diaplay status of tunnel server daemon
 //  parameters

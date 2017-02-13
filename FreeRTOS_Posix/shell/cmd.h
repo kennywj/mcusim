@@ -23,6 +23,7 @@ extern void cmd_ver(int argc, char* argv[]);
 extern void cmd_on(int argc, char* argv[]);
 extern void cmd_off(int argc, char* argv[]);
 extern void cmd_xmt(int argc, char* argv[]);
+extern void cmd_os(int argc, char* argv[]);
 
 extern void dump_frame(char *msg, char *frame, int len);
 
