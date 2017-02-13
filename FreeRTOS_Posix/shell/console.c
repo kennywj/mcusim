@@ -40,6 +40,7 @@ struct cmd_tbl commands[]=
 	{"on",      cmd_on,   "active uart device",                 ""},
 	{"off",     cmd_off,  "deactive uart device",               ""},
 	{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
+	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{NULL,        NULL}
 };

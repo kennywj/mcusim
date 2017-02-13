@@ -51,3 +51,25 @@ void cmd_ver(int argc, char* argv[])
     extern const char *software_version;
     printf("%s\n",software_version);
 }
+
+//
+//  function: cmd_os
+//      display currently OS status
+//  parameters
+//      argc:   1
+//      argv:   none
+//
+void cmd_os(int argc, char* argv[])
+{
+    char *buf = malloc(0x4000);
+    if (buf)
+    {
+        printf("======<Threads status>======\nName\t\tState\tPrio\tStack\tNum");
+        vTaskList(buf);
+        printf("%s",buf);
+        printf("======<Threads run time>======\nName\t\tSeconds\t\tPercent");
+        vTaskGetRunTimeStats(buf);
+        printf("%s",buf);        
+        free(buf);
+    }
+}

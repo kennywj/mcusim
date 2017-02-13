@@ -440,4 +440,5 @@
 
 // add by kenny
 #define LWIP_TIMEVAL_PRIVATE    0
+#define TCPIP_THREAD_NAME       "TcpIp"
 #endif /* LWIP_LWIPOPTS_H */
