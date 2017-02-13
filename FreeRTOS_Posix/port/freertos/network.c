@@ -68,5 +68,6 @@ LwIP_Init(void)
     }
     tcpip_init(tcpip_init_done, &sem);
     sys_sem_wait(&sem);
+    
     printf("TCP/IP initialized.\n");
 }

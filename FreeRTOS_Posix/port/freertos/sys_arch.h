@@ -45,6 +45,8 @@ typedef xSemaphoreHandle sys_sem_t;
 typedef xQueueHandle sys_mbox_t;
 typedef xTaskHandle sys_thread_t;
 
+#define sys_mutex_valid(mutex)			(((mutex) != NULL) && (*(mutex) != NULL))
+
 typedef struct _sys_arch_state_t
 {
 	// Task creation data.

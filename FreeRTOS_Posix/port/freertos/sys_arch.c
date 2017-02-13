@@ -37,10 +37,12 @@
 #include "lwip/sys.h"
 #include "lwip/mem.h"
 #include "lwip/stats.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+//#include "FreeRTOS.h"
+//#include "task.h"
+//#include "queue.h"
 #include "lwip/timeouts.h"
+
+#define sys_mutex_valid(mutex)			(((mutex) != NULL) && (*(mutex) != NULL))
 
 xTaskHandle xTaskGetCurrentTaskHandle( void ) PRIVILEGED_FUNCTION;
 extern void * vTaskGetCurrentTCB( void );
@@ -391,8 +393,8 @@ struct timeoutlist *tl;
 /* Create a new mutex*/
 err_t sys_mutex_new(sys_mutex_t *mutex) {
 
-  *mutex = xSemaphoreCreateMutex();
-		if(*mutex == NULL)
+    *mutex = xSemaphoreCreateMutex();
+	if(*mutex == NULL)
 	{
 #if SYS_STATS
       ++lwip_stats.sys.mutex.err;
@@ -406,31 +408,41 @@ err_t sys_mutex_new(sys_mutex_t *mutex) {
 		lwip_stats.sys.mutex.max = lwip_stats.sys.mutex.used;
 	}
 #endif /* SYS_STATS */
-        return ERR_OK;
+    return ERR_OK;
 }
 /*-----------------------------------------------------------------------------------*/
 /* Deallocate a mutex*/
 void sys_mutex_free(sys_mutex_t *mutex)
 {
+    if (sys_mutex_valid(mutex)) {
 #if SYS_STATS
-      --lwip_stats.sys.mutex.used;
+        --lwip_stats.sys.mutex.used;
 #endif /* SYS_STATS */
 			
-	vQueueDelete(*mutex);
+	    vQueueDelete(*mutex);
+    }
 }
 /*-----------------------------------------------------------------------------------*/
 /* Lock a mutex*/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
-	sys_arch_sem_wait(*mutex, 0);
+    if (sys_mutex_valid(mutex)) {
+		while (xSemaphoreTake(*mutex, portMAX_DELAY) != pdTRUE);
+	}
+	// bug: input parameter is pointer, sent to sys_arch_sem_wait is variable
+	//sys_arch_sem_wait(*mutex, 0);
 }
 
 /*-----------------------------------------------------------------------------------*/
 /* Unlock a mutex*/
 void sys_mutex_unlock(sys_mutex_t *mutex)
 {
-	xSemaphoreGive(*mutex);
+    if (sys_mutex_valid(mutex)) {
+		xSemaphoreGive(*mutex);
+	}
+	//xSemaphoreGive(*mutex);
 }
+
 #endif /*LWIP_COMPAT_MUTEX*/
 /*-----------------------------------------------------------------------------------*/
 // TODO
