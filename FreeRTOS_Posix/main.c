@@ -93,6 +93,7 @@
 #include <mqueue.h>
 #include <errno.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -125,6 +126,8 @@
 #include "AsyncIO/AsyncIOSerial.h"
 
 #include "shell/cmd.h"
+
+
 
 /* Priority definitions for the tasks in the demo application. */
 #define SHELL_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )

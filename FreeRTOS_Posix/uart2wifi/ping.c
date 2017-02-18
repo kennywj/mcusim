@@ -147,7 +147,7 @@ ping_recv(int s)
         }
     }   // end of while
 
-    if (len == 0) 
+    if (len < 0) 
     {
         LWIP_DEBUGF( PING_DEBUG, ("ping: recv - %"U32_F" ms - timeout\n", (sys_now()-ping_time)));
     }

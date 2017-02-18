@@ -1,9 +1,16 @@
+//
+// porting Lwip
+//
+
+#include "lwip/init.h"
 #include "lwip/mem.h"
 #include "lwip/memp.h"
 #include "lwip/dhcp.h"
 #include "lwip/dns.h"
 #include "lwip/ip_addr.h"
 #include "lwip/tcpip.h"
+#include "lwip/debug.h"
+
 #include "ethernetif.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -15,6 +22,8 @@
 
 struct netif xnetif[NET_IF_NUM]; /* network interface structure */
 static ip_addr_t ipaddr, netmask, gw;
+
+unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
 
 //
 //  function: init_netifs
