@@ -168,12 +168,12 @@ void uart_tx_process(char type, int len, char *data)
     
     if (len > (MAX_PKT_SIZE-(sizeof(struct _ethseg_msg_)+2)))
     {
-	    printf("size=%d overflow\n",len);
+	    printf("%s: size=%d overflow\n",__FUNCTION__,len);
         return;
     } 
     if (iSerialReceive<=0 || uart_tx_sem==NULL)
     {
-        printf("device not ready");
+        printf("%s: device not ready\n",__FUNCTION__);
         return;
     }   
     // obtain mutex
@@ -189,14 +189,14 @@ void uart_tx_process(char type, int len, char *data)
     size = len + sizeof(struct _ethseg_msg_) + 2;
     // transmit
     //printf("%s: len=%d, crc=%x, sizeof %d\n",__FUNCTION__, len, crc, sizeof(struct _ethseg_msg_));
-    //dump_frame("",msg,len + sizeof(struct _ethseg_msg_) + 2);
+    dump_frame("",msg,len + sizeof(struct _ethseg_msg_) + 2);
     ret = write(iSerialReceive, msg, size); // include crc
     if (ret != size)
     {
         if (ret == -1)
-            printf("write error %d\n",errno);
+            printf("%s: write error %d\n",__FUNCTION__,errno);
         else
-            printf("ret=%d, lost %d\n",ret, size-ret);
+            printf("%s: ret=%d, lost %d\n",__FUNCTION__,ret, size-ret);
     }    
     eth_seg_tx_count++;
     xSemaphoreGive(uart_tx_sem);

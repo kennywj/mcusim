@@ -25,9 +25,9 @@ typedef uintptr_t          mem_ptr_t;
 #define X32_F "lx"
 #define SZT_F "uz"
  
-
+#ifndef BYTE_ORDER
 #define BYTE_ORDER LITTLE_ENDIAN
- 
+#endif
 /* Use LWIP error codes */
 #define LWIP_PROVIDE_ERRNO
 

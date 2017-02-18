@@ -54,7 +54,7 @@
 #include "err.h"
 #include "ethernetif.h"
 //#include "queue.h"
-
+#include "uart2wifi.h"
 //#include "lwip/ethip6.h" //Evan add for ipv6
 //#include <lwip_intf.h>
 
@@ -97,7 +97,7 @@ static void low_level_init(struct netif *netif)
 	netif->mtu = 1500;
 
 	/* Accept broadcast address and ARP traffic */
-	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;	     
+	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP | NETIF_FLAG_LINK_UP;	     
 
 	/* Wlan interface is initialized later */
 }
@@ -121,25 +121,16 @@ static void low_level_init(struct netif *netif)
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-  /* Refer to eCos lwip eth_drv_send() */
 	//struct eth_drv_sg sg_list[MAX_ETH_DRV_SG];
-	//int sg_len = 0;
 	struct pbuf *q;
-
-	//if(!rltk_wlan_running(netif_get_idx(netif)))
-	//	return ERR_IF;
-
-	//for (q = p; q != NULL && sg_len < MAX_ETH_DRV_SG; q = q->next) {
-	//	sg_list[sg_len].buf = (unsigned int) q->payload;
-	//	sg_list[sg_len++].len = q->len;
-	//}
-
-	//if (sg_len) {
-	//	if (rltk_wlan_send(netif_get_idx(netif), sg_list, sg_len, p->tot_len) == 0)
-	//		return ERR_OK;
-	//	else
-	//		return ERR_BUF;	// return a non-fatal error
-	//}
+    char buf[1600];
+    
+    // copy to a linear buffer
+    pbuf_copy_partial(p, buf, p->tot_len, 0);
+    
+    dump_frame("low_level_output:", buf, p->tot_len);
+    // output the packet
+    uart_tx_process(0, p->tot_len, buf);
 
 	return ERR_OK;
 }
