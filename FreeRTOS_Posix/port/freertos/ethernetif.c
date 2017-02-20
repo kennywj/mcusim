@@ -128,7 +128,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
     // copy to a linear buffer
     pbuf_copy_partial(p, buf, p->tot_len, 0);
     
-    dump_frame("low_level_output:", buf, p->tot_len);
+    //dump_frame("low_level_output:", buf, p->tot_len);
     // output the packet
     uart_tx_process(0, p->tot_len, buf);
 

@@ -198,6 +198,7 @@ void ping_thread( void *arg )
 end_ping_thread:  
     LWIP_DEBUGF( PING_DEBUG, ("ping: end "));
     // Kill init thread after all init tasks done
+    hPingTask = NULL;
 	vTaskDelete(NULL);
 }
 

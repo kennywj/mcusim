@@ -151,7 +151,7 @@ int main( void )
 	xTaskCreate( do_console, "Shell", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &hShellTask );
 
 	/* Create a Task which waits to do system init. */
-	xTaskCreate( SysInitHook, "SysInit", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 4, &hInitTask );
+	//xTaskCreate( SysInitHook, "SysInit", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 4, &hInitTask );
 
 	/* Set the scheduler running.  This function will not return unless a task calls vTaskEndScheduler(). */
 	vTaskStartScheduler();
@@ -160,7 +160,7 @@ int main( void )
 }
 
 /*-----------------------------------------------------------*/
-void SysInitHook( void *pvParameters )
+/*void SysInitHook( void *pvParameters )
 {
     // do Lwip init
     LwIP_Init();
@@ -168,7 +168,7 @@ void SysInitHook( void *pvParameters )
     
     // Kill init thread after all init tasks done
 	vTaskDelete(NULL);
-}
+}*/
 
 /*-----------------------------------------------------------*/
 

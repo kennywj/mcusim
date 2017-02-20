@@ -65,6 +65,10 @@ void uart_rx_process( void *pvParameters )
     unsigned char ch,cmd;
     unsigned char buf[MAX_PKT_SIZE], resp[MAX_MSG_SIZE];
     unsigned short off=0, len, crc, msgcrc;
+    extern void LwIP_Init(void);
+    
+    // do Lwip init
+    LwIP_Init();
     
 	if ( NULL != hSerialRxQueue )
 	{
@@ -136,6 +140,7 @@ void uart_rx_process( void *pvParameters )
 		                else    
 		                {   // data packet 
 		                    dump_frame("receviced packet",(char *)&buf[sizeof(struct _ethseg_msg_)],len);
+		                    // forward to lwip
 		                }
                     }                    	
 		        break; 
