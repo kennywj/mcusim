@@ -250,7 +250,7 @@
 /**
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
-#define LWIP_RAW                        0
+#define LWIP_RAW                        1
 
 /*
    ----------------------------------
@@ -436,9 +436,20 @@
 #define DHCP_DEBUG                  LWIP_DBG_OFF
 #define HTTPD_DEBUG                 LWIP_DBG_ON
 
-#define LWIP_NETIF_STATUS_CALLBACK  1
+#define LWIP_NETIF_STATUS_CALLBACK      1
 
 // add by kenny
-#define LWIP_TIMEVAL_PRIVATE    0
-#define TCPIP_THREAD_NAME       "TcpIp"
+#define LWIP_TIMEVAL_PRIVATE            0
+
+#define TCPIP_THREAD_NAME               "TcpIp"
+
+#define LWIP_SO_SNDTIMEO                1
+
+#define LWIP_SO_RCVTIMEO                1
+
+#define LWIP_SO_SNDRCVTIMEO_NONSTANDARD 1
+
+extern unsigned char debug_flags;
+#define LWIP_DBG_TYPES_ON debug_flags
+
 #endif /* LWIP_LWIPOPTS_H */

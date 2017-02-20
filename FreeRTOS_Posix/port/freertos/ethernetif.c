@@ -54,7 +54,7 @@
 #include "err.h"
 #include "ethernetif.h"
 //#include "queue.h"
-
+#include "uart2wifi.h"
 //#include "lwip/ethip6.h" //Evan add for ipv6
 //#include <lwip_intf.h>
 
@@ -71,6 +71,7 @@
 
 static void arp_timer(void *arg);
 
+unsigned netin_drop_count;
 
 /**
  * In this function, the hardware should be initialized.
@@ -83,10 +84,10 @@ static void arp_timer(void *arg);
 static void low_level_init(struct netif *netif)
 {
     /* (We just fake an address...) */
-    netif->hwaddr[0] = 0x02;
-    netif->hwaddr[1] = 0x12;
-    netif->hwaddr[2] = 0x34;
-    netif->hwaddr[3] = 0x56;
+    netif->hwaddr[0] = 0x00;
+    netif->hwaddr[1] = 0x0a;
+    netif->hwaddr[2] = 0x13;
+    netif->hwaddr[3] = 0x45;
     netif->hwaddr[4] = 0x78;
     netif->hwaddr[5] = 0xab;
   
@@ -97,7 +98,7 @@ static void low_level_init(struct netif *netif)
 	netif->mtu = 1500;
 
 	/* Accept broadcast address and ARP traffic */
-	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;	     
+	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP | NETIF_FLAG_LINK_UP;	     
 
 	/* Wlan interface is initialized later */
 }
@@ -121,25 +122,16 @@ static void low_level_init(struct netif *netif)
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-  /* Refer to eCos lwip eth_drv_send() */
 	//struct eth_drv_sg sg_list[MAX_ETH_DRV_SG];
-	//int sg_len = 0;
 	struct pbuf *q;
-
-	//if(!rltk_wlan_running(netif_get_idx(netif)))
-	//	return ERR_IF;
-
-	//for (q = p; q != NULL && sg_len < MAX_ETH_DRV_SG; q = q->next) {
-	//	sg_list[sg_len].buf = (unsigned int) q->payload;
-	//	sg_list[sg_len++].len = q->len;
-	//}
-
-	//if (sg_len) {
-	//	if (rltk_wlan_send(netif_get_idx(netif), sg_list, sg_len, p->tot_len) == 0)
-	//		return ERR_OK;
-	//	else
-	//		return ERR_BUF;	// return a non-fatal error
-	//}
+    char buf[1600];
+    
+    // copy to a linear buffer
+    pbuf_copy_partial(p, buf, p->tot_len, 0);
+    
+    //dump_frame("low_level_output:", buf, p->tot_len);
+    // output the packet
+    uart_tx_process(0, p->tot_len, buf);
 
 	return ERR_OK;
 }
@@ -165,42 +157,31 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
  *
  * @param netif the lwip network interface structure for this ethernetif
  */
-//void ethernetif_input( void * pvParameters )
-
 
 /* Refer to eCos eth_drv_recv to do similarly in ethernetif_input */
-void ethernetif_recv(struct netif *netif, int total_len)
+int ethernetif_recv(struct netif *netif, char *data, int total_len)
 {
-	//struct eth_drv_sg sg_list[MAX_ETH_DRV_SG];
-	struct pbuf *p, *q;
-	//int sg_len = 0;
-
-	//if(!rltk_wlan_running(netif_get_idx(netif)))
-	//	return;
-
-	//if ((total_len > MAX_ETH_MSG) || (total_len < 0))
-	//	total_len = MAX_ETH_MSG;
+	struct pbuf *p;
 
 	// Allocate buffer to store received packet
 	p = pbuf_alloc(PBUF_RAW, total_len, PBUF_POOL);
-	if (p == NULL) {
-		printf("\n\rCannot allocate pbuf to receive packet");
-		return;
+	if (p) 
+	  // put data into pbuf
+        pbuf_take(p, data, total_len);
+    else
+    {
+		printf("Cannot allocate pbuf to receive packet");
+		return -1;
 	}
-
-	// Create scatter list
-	//for (q = p; q != NULL && sg_len < MAX_ETH_DRV_SG; q = q->next) {
-   	//	sg_list[sg_len].buf = (unsigned int) q->payload;
-	//	sg_list[sg_len++].len = q->len;
-	//}
-
-	// Copy received packet to scatter list from wrapper rx skb
-  	//printf("\n\rwlan:%c: Recv sg_len: %d, tot_len:%d", netif->name[1],sg_len, total_len);
-	//rltk_wlan_recv(netif_get_idx(netif), sg_list, sg_len);
+	
+    dump_frame("ethernetif_recv:", data, total_len);
 	// Pass received packet to the interface
 	if (ERR_OK != netif->input(p, netif))
+	{
 		pbuf_free(p);
-
+		return -2;
+    }
+    return 0;   // success
 }
 
 /**

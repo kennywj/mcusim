@@ -67,7 +67,7 @@ void cmd_os(int argc, char* argv[])
         printf("======<Threads status>======\nName\t\tState\tPrio\tStack\tNum");
         vTaskList(buf);
         printf("%s",buf);
-        printf("======<Threads run time>======\nName\t\tSeconds\t\tPercent");
+        printf("======<Current %u, Threads run time>======\nName\t\tSeconds\t\tPercent",xTaskGetTickCount());
         vTaskGetRunTimeStats(buf);
         printf("%s",buf);        
         free(buf);

@@ -42,6 +42,7 @@ struct cmd_tbl commands[]=
 	{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
 	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
+	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
 	{NULL,        NULL}
 };
 // current command pointer
