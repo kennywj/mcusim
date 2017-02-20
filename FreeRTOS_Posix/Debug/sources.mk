@@ -22,6 +22,8 @@ FileIO \
 Common_Demo/Minimal \
 Common_Demo/Full \
 AsyncIO \
-shell
+shell   \
+uart2wifi   \
+lwip
 
 

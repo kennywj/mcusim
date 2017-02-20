@@ -31,7 +31,10 @@ void cmd_help(int argc, char* argv[])
 void cmd_quit(int argc, char* argv[])
 {
     extern int do_exit;
+    extern void exit_u2w(void);
+
     do_exit = 1; // user exit
+    exit_u2w();
 }
 
 
@@ -47,4 +50,26 @@ void cmd_ver(int argc, char* argv[])
 {
     extern const char *software_version;
     printf("%s\n",software_version);
+}
+
+//
+//  function: cmd_os
+//      display currently OS status
+//  parameters
+//      argc:   1
+//      argv:   none
+//
+void cmd_os(int argc, char* argv[])
+{
+    char *buf = malloc(0x4000);
+    if (buf)
+    {
+        printf("======<Threads status>======\nName\t\tState\tPrio\tStack\tNum");
+        vTaskList(buf);
+        printf("%s",buf);
+        printf("======<Current %u, Threads run time>======\nName\t\tSeconds\t\tPercent",xTaskGetTickCount());
+        vTaskGetRunTimeStats(buf);
+        printf("%s",buf);        
+        free(buf);
+    }
 }
