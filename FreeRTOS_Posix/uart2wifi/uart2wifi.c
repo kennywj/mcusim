@@ -25,6 +25,10 @@
 #include "AsyncIO/AsyncIO.h"
 #include "AsyncIO/AsyncIOSerial.h"
 
+// network interface
+#include "lwip/err.h"
+#include "ethernetif.h"
+
 struct _ethseg_msg_
 {
     unsigned char start;
@@ -40,12 +44,12 @@ struct _ethseg_msg_
 #define MAX_BAUD_NUM    4
 
 static int u2w_on=0;
-static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB0";
+static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB1";
 static int iSerialReceive = 0;
 static xTaskHandle hSerialTask;
 static xQueueHandle xSerialRxQueue;
 static xSemaphoreHandle uart_tx_sem =	NULL;
-static unsigned int eth_seg_tx_count=0, eth_seg_rx_count=0, eth_seg_rx_err=0;
+static unsigned int eth_seg_tx_count=0, eth_seg_rx_count=0, eth_seg_rx_err=0, eth_seg_rx_drop=0;
 static unsigned char eth_seg_state=0, txbuf[MAX_PKT_SIZE];
 const char *baudstr[MAX_BAUD_NUM]={"9600","38400","57600","115200"};
 const int baudrate[MAX_BAUD_NUM]={B9600,B38400,B57600,B115200};
@@ -65,13 +69,17 @@ void uart_rx_process( void *pvParameters )
     unsigned char ch,cmd;
     unsigned char buf[MAX_PKT_SIZE], resp[MAX_MSG_SIZE];
     unsigned short off=0, len, crc, msgcrc;
-    extern void LwIP_Init(void);
-    
-    // do Lwip init
-    LwIP_Init();
+    struct netif *uartif=NULL;
+    int ret;
+    extern struct netif *LwIP_Init(void);
     
 	if ( NULL != hSerialRxQueue )
 	{
+	    // do Lwip init
+        uartif = LwIP_Init();
+        if (!uartif)
+            goto end_uart_rx_process;
+        
 		for ( ;; )
 		{
 			if ( pdFALSE == xQueueReceive( hSerialRxQueue, &ch, 20 ) )  // wait more the 20ms, expired
@@ -139,8 +147,12 @@ void uart_rx_process( void *pvParameters )
 		                }    
 		                else    
 		                {   // data packet 
-		                    dump_frame("receviced packet",(char *)&buf[sizeof(struct _ethseg_msg_)],len);
+		                    //dump_frame("receviced packet",(char *)&buf[sizeof(struct _ethseg_msg_)],len);
 		                    // forward to lwip
+		                    ret = ethernetif_recv(uartif, (char *)&buf[sizeof(struct _ethseg_msg_)],len);
+		                    if (ret<0)
+		                        eth_seg_rx_drop++;
+		                    
 		                }
                     }                    	
 		        break; 
@@ -149,7 +161,7 @@ void uart_rx_process( void *pvParameters )
 		        off = 0;
 		}
 	}
-
+end_uart_rx_process:
 	/* Port wasn't opened. */
 	printf( "%s Task exiting.\n",__FUNCTION__ );
 	vTaskDelete( NULL );
@@ -236,7 +248,7 @@ void exit_u2w()
 void cmd_stat(int argc, char* argv[])
 {
     printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
-    printf("Tx %d, Rx %d, Error %d\n",eth_seg_tx_count, eth_seg_rx_count, eth_seg_rx_err);
+    printf("Tx %d, Rx %d, Error %d, Drop %d\n",eth_seg_tx_count, eth_seg_rx_count, eth_seg_rx_err, eth_seg_rx_drop);
 }
 
 //

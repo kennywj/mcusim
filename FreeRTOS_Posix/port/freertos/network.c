@@ -66,7 +66,7 @@ tcpip_init_done(void *arg)
 //  function: LwIP_Init
 //      
 //
-void 
+struct netif * 
 LwIP_Init(void)
 {
 	sys_sem_t sem;
@@ -79,4 +79,5 @@ LwIP_Init(void)
     sys_sem_wait(&sem);
     
     printf("TCP/IP initialized.\n");
+    return &xnetif[NET_IF_NUM];
 }
