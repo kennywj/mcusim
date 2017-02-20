@@ -79,5 +79,5 @@ LwIP_Init(void)
     sys_sem_wait(&sem);
     
     printf("TCP/IP initialized.\n");
-    return &xnetif[NET_IF_NUM];
+    return &xnetif[0];
 }
