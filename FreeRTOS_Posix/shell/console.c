@@ -31,7 +31,7 @@ extern int parser(unsigned inflag,char *token,int tokmax,char *line,
     char *brkused,int *next, char *quoted);
 extern int fd_set_blocking(int fd, int blocking) ;
 
-struct cmd_tbl commands[]=
+/*struct cmd_tbl commands[]=
 {
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
@@ -43,8 +43,10 @@ struct cmd_tbl commands[]=
 	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
+	{"duk",     cmd_duk,  "Javascript script interpreter",      "-x\"<javascript script program string>\", -f\"<javacsript program file>\""},
 	{NULL,        NULL}
-};
+};*/
+
 // current command pointer
 struct cmd_tbl *curr_cmd;
 
