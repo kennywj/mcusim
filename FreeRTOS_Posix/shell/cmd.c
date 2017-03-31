@@ -28,6 +28,7 @@ struct cmd_tbl commands[]=
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
 	{"duk",     cmd_duk,  "Javascript script interpreter",      "-x\"<javascript script program string>\", -f\"<javacsript program file>\""},
+	{"net",     cmd_net,  "display network information",        ""},
 	{NULL,        NULL}
 };
 

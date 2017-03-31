@@ -142,7 +142,6 @@ void uart_rx_process( void *pvParameters )
 		                {
 		                    buf[sizeof(struct _ethseg_msg_)+len]='\0';
 		                    printf("%s:%s\n",(cmd==0x81?"response":"command"),(char *)&buf[sizeof(struct _ethseg_msg_)]);
-		                    //if (cmd==0x01)
 		                    //  do_command();
 		                }    
 		                else    

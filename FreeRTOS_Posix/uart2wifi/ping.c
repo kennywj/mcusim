@@ -119,9 +119,9 @@ ping_recv(int s)
     {
         if (len >= (int)(sizeof(struct ip_hdr)+sizeof(struct icmp_echo_hdr))) 
         {
-            if (from.sin_family == AF_INET) 
+            if (from.sin_family != AF_INET) 
             {
-                LWIP_DEBUGF( PING_DEBUG, ("ping: invalid sin_family\n"));
+                LWIP_DEBUGF( PING_DEBUG, ("ping: invalid sin_family %d\n", from.sin_family));
             } 
             else 
             {
@@ -195,6 +195,7 @@ void ping_thread( void *arg )
         vTaskDelay(PING_DELAY);
         count++;
     }
+    lwip_close(s);
 end_ping_thread:  
     LWIP_DEBUGF( PING_DEBUG, ("ping: end "));
     // Kill init thread after all init tasks done

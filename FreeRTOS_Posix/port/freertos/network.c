@@ -34,8 +34,8 @@ init_netifs(void)
 {
     int idx=0;
     
-    IP_ADDR4(&gw,      192,168,1,1);
-    IP_ADDR4(&ipaddr,  192,168,1,200);
+    IP_ADDR4(&gw,      192,168,43,1);
+    IP_ADDR4(&ipaddr,  192,168,43,100);
     IP_ADDR4(&netmask, 255,255,255,0);
     netif_add(&xnetif[idx], ip_2_ip4(&ipaddr), ip_2_ip4(&netmask), ip_2_ip4(&gw), NULL, ethernetif_init, tcpip_input);
     netif_set_default(&xnetif[idx]);
@@ -80,4 +80,24 @@ LwIP_Init(void)
     
     printf("TCP/IP initialized.\n");
     return &xnetif[0];
+}
+
+//
+// command net, display network related information
+//
+void cmd_net(int argc, char* argv[])
+{
+    struct netif *netif;
+    char ipaddr[16],netmask[16],gw[16];
+    
+    for(netif = netif_list; netif != NULL; netif = netif->next) {
+        
+        strncpy(ipaddr,ipaddr_ntoa(&netif->ip_addr),16);
+        strncpy(netmask,ipaddr_ntoa(&netif->netmask),16);
+        strncpy(gw,ipaddr_ntoa(&netif->gw),16);
+        printf("%c%c: ip %s, mask %s, gw %s\n",netif->name[0], netif->name[1],
+            ipaddr, netmask, gw);
+        //printf("%c%c: ip %s, mask %s, gw %s\n",netif->name[0], netif->name[1],
+        //ipaddr_ntoa(&netif->ip_addr), ipaddr_ntoa(&netif->netmask), ipaddr_ntoa(&netif->gw));
+    }
 }
