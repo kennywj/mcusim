@@ -34,8 +34,8 @@ init_netifs(void)
 {
     int idx=0;
     
-    IP_ADDR4(&gw,      192,168,43,1);
-    IP_ADDR4(&ipaddr,  192,168,43,100);
+    IP_ADDR4(&gw,      192,168,1,1);
+    IP_ADDR4(&ipaddr,  192,168,1,100);
     IP_ADDR4(&netmask, 255,255,255,0);
     netif_add(&xnetif[idx], ip_2_ip4(&ipaddr), ip_2_ip4(&netmask), ip_2_ip4(&gw), NULL, ethernetif_init, tcpip_input);
     netif_set_default(&xnetif[idx]);
