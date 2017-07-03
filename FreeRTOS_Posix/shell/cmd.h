@@ -27,6 +27,6 @@ extern void cmd_os(int argc, char* argv[]);
 extern void cmd_ping(int argc, char* argv[]);
 extern void cmd_duk(int argc, char* argv[]);
 extern void cmd_net(int argc, char* argv[]);
-extern void dump_frame(char *msg, char *frame, int len);
+extern void dump_frame(char *start, int len, char *fmt, ...);
 
 #endif

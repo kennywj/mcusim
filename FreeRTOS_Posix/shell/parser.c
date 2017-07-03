@@ -293,7 +293,7 @@ int main(int argc, char **argv)
 	    next=0;				/* make sure you do this */
 	    while(parser(0,token[i],80,line,&brkused,&next,&quoted)==0)
 	    {
-	        //dump_frame("",token,strlen(token));
+	        //dump_frame(token,strlen(token),"");
 	        if (brkused=='\r')	/* <CR> is a break so it won't be included  */
     	       break;		/* in the token.  treat as end-of-line here */
     	    printf(" Token %d %p = (%s)\n",i, token[i], token[i]);

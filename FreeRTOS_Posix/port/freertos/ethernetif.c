@@ -174,7 +174,7 @@ int ethernetif_recv(struct netif *netif, char *data, int total_len)
 		return -1;
 	}
 	
-    dump_frame("ethernetif_recv:", data, total_len);
+    dump_frame(data, total_len,"ethernetif_recv: %d",total_len);
 	// Pass received packet to the interface
 	if (ERR_OK != netif->input(p, netif))
 	{

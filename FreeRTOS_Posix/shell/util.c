@@ -341,25 +341,30 @@ unsigned int get_time_milisec(void)
 //          0       success
 //          other   fail
 //
-void dump_frame(char *msg, char *frame, int len)
+#define MAX_FMT_SIZE 256
+
+void dump_frame(char *start, int len, char *fmt, ...)
 {
     unsigned short  i;
-    unsigned char *p=(unsigned char *)frame;
+    unsigned char *p=(unsigned char *)start;
     char ch[16+1]= {0};
-
+    va_list argp;
+    
     if (len<=0)
     {
         fprintf(stderr,"size overrun %u\n",len);
         len &= 0x7fff;
     }
-    if (msg)
-        fprintf(stderr,"%s, size %d\n",msg, len);
+    va_start(argp,fmt);
+    vfprintf(stderr, fmt, argp);
+    va_end(argp);
+    
     while(len>16)
     {
         for (i=0; i<16; i++)
             ch[i] = (p[i]<0x20 || p[i]>=0x7f) ? '.' : p[i];
 
-        fprintf(stderr,"%04x: ", (p-(unsigned char *)frame));
+        fprintf(stderr,"%04x: ", (p-(unsigned char *)start));
         fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X-%02X %02X %02X %02X %02X %02X %02X %02X | ",
                 p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
         fprintf(stderr,"%s \n", ch);
@@ -369,7 +374,7 @@ void dump_frame(char *msg, char *frame, int len)
     }/* End of for */
     if (len)
     {
-        fprintf(stderr,"%04x: ", (p-(unsigned char *)frame));
+        fprintf(stderr,"%04x: ", (p-(unsigned char *)start));
         for(i=0; i<16; i++)
         {
             if (i<len)
