@@ -341,27 +341,48 @@ unsigned int get_time_milisec(void)
 //          0       success
 //          other   fail
 //
-void dump_frame(char *msg, char *frame, int len)
+int show_type = 2; // show words
+void dump_frame(char *frame, int len, const char * fmt, ...)
 {
     unsigned short  i;
     unsigned char *p=(unsigned char *)frame;
     char ch[16+1]= {0};
-
+    va_list args;
     if (len<=0)
     {
         fprintf(stderr,"size overrun %u\n",len);
         len &= 0x7fff;
     }
-    if (msg)
-        fprintf(stderr,"%s, size %d\n",msg, len);
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end (args);
+    //if (msg)
+    //    fprintf(stderr,"%s, size %d\n",msg, len);
+    //len = ((len-1)|0x0f)+1;
     while(len>16)
     {
         for (i=0; i<16; i++)
             ch[i] = (p[i]<0x20 || p[i]>=0x7f) ? '.' : p[i];
 
-        fprintf(stderr,"%04x: ", (p-(unsigned char *)frame));
-        fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X-%02X %02X %02X %02X %02X %02X %02X %02X | ",
-                p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
+        //fprintf(stderr,"%08x: ", (p-(unsigned char *)frame));
+        fprintf(stderr,"%08x: ", p);
+        switch(show_type)
+        {
+            case 2:
+                fprintf(stderr,"%08X %08X-%08X %08X | ",
+                    *(unsigned int *)&p[0], *(unsigned int *)&p[4], *(unsigned int *)&p[8], *(unsigned int *)&p[12]);
+            break;
+            case 1:
+                fprintf(stderr,"%04X %04X %04X %04X-%04X %04X %04X %04X | ",
+                    *(unsigned short *)&p[0], *(unsigned short *)&p[2], *(unsigned short *)&p[4], 
+                    *(unsigned short *)&p[6], *(unsigned short *)&p[8], *(unsigned short *)&p[10], 
+                    *(unsigned short *)&p[12], *(unsigned short *)&p[14]);
+            break;
+            default:
+                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X-%02X %02X %02X %02X %02X %02X %02X %02X | ",
+                    p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
+            break;
+        }
         fprintf(stderr,"%s \n", ch);
 
         p+=16;
@@ -369,18 +390,61 @@ void dump_frame(char *msg, char *frame, int len)
     }/* End of for */
     if (len)
     {
-        fprintf(stderr,"%04x: ", (p-(unsigned char *)frame));
-        for(i=0; i<16; i++)
+        //fprintf(stderr,"%08x: ", (p-(unsigned char *)frame));
+        fprintf(stderr,"%08x: ", p);
+        if (show_type == 2)
+            len = ((len-1)|0x3)+1;
+        else if (show_type == 1)
+            len = ((len-1)|0x1)+1;
+        for(i=0; i<16;)
         {
-            if (i<len)
+            switch(show_type)
             {
-                ch[i] = (p[i]<0x20 || p[i]>=0x7f) ? '.' : p[i];
-                fprintf(stderr,"%02X ",p[i]);
-            }
-            else
-            {
-                ch[i]='\0';
-                fprintf(stderr,"   ");
+                case 2:
+                    if (i<len)
+                    {
+                        ch[i] = (p[i]<0x20 || p[i]>=0x7f) ? '.' : p[i];
+                        ch[i+1] = (p[i+1]<0x20 || p[i+1]>=0x7f) ? '.' : p[i+1];
+                        ch[i+2] = (p[i+2]<0x20 || p[i+2]>=0x7f) ? '.' : p[i+2];
+                        ch[i+3] = (p[i+3]<0x20 || p[i+3]>=0x7f) ? '.' : p[i+3];
+                        fprintf(stderr,"%08X ",*(unsigned int *)&p[i]);
+                    }
+                    else
+                    {
+                        //ch[i]=ch[i+1]=ch[i+2]=ch[i+3]='\0';
+                        ch[i]='\0';
+                        fprintf(stderr,"            ");
+                    }
+                    i+=4;
+                break;
+                case 1:
+                    if (i<len)
+                    {
+                        ch[i] = (p[i]<0x20 || p[i]>=0x7f) ? '.' : p[i];
+                        ch[i+1] = (p[i+1]<0x20 || p[i+1]>=0x7f) ? '.' : p[i+1];
+                        fprintf(stderr,"%04X ",*(unsigned short *)&p[i]);
+                    }
+                    else
+                    {
+                        //ch[i]=ch[i+1]='\0';
+                        ch[i]='\0';
+                        fprintf(stderr,"      ");
+                    }
+                    i+=2;
+                break;
+                default:
+                    if (i<len)
+                    {
+                        ch[i] = (p[i]<0x20 || p[i]>=0x7f) ? '.' : p[i];
+                        fprintf(stderr,"%02X ",p[i]);
+                    }
+                    else
+                    {
+                        ch[i]='\0';
+                        fprintf(stderr,"   ");
+                    }
+                    i++;
+                break;
             }
         }
         fprintf(stderr,"| %s \n", ch);
