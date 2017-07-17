@@ -141,11 +141,7 @@ extern void LwIP_Init(void);
 int main( void )
 {
     xTaskHandle hShellTask, hInitTask;
-    char buf[64]={0};
-    int i;
-    for(i=0;i<25;i++)
-        buf[i]=i;
-    dump_frame(buf, 25,"dump test\n");
+    
 	/* Initialise hardware and utilities. */
 	vParTestInitialise();
 	vPrintInitialise();
