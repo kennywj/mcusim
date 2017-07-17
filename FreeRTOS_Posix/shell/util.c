@@ -342,23 +342,22 @@ unsigned int get_time_milisec(void)
 //          other   fail
 //
 int show_type = 2; // show words
-void dump_frame(char *frame, int len, const char * fmt, ...)
+#define MAX_FMT_SIZE 256
+void dump_frame(char *start, int len, const char * fmt, ...)
 {
     unsigned short  i;
-    unsigned char *p=(unsigned char *)frame;
+    unsigned char *p=(unsigned char *)start;
     char ch[16+1]= {0};
-    va_list args;
+    va_list argp;
+    
     if (len<=0)
     {
         fprintf(stderr,"size overrun %u\n",len);
         len &= 0x7fff;
     }
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end (args);
-    //if (msg)
-    //    fprintf(stderr,"%s, size %d\n",msg, len);
-    //len = ((len-1)|0x0f)+1;
+    va_start(argp,fmt);
+    vfprintf(stderr, fmt, argp);
+    va_end(argp);
     while(len>16)
     {
         for (i=0; i<16; i++)

@@ -132,7 +132,28 @@ int do_command(char *cmdbuf)
 			break;
 		}		
 		p++;
-	}    
+	}   
+	 
+	if (ret<0)  // not found, run it as system command
+	{
+	    char buf[512];
+        FILE *pp;
+        fprintf(stdout, "%s: %s\n", __FUNCTION__, cmdbuf);
+        if( (pp = popen(cmdbuf, "r")) == NULL )
+        {
+            fprintf(stdout, "popen() error!\n");
+            exit(1);
+        }
+
+        fprintf(stdout, "%s: popen\n", __FUNCTION__);
+        while(fgets(buf, sizeof buf, pp))
+        {
+            fprintf(stdout, "%s", buf);
+        }
+        pclose(pp);
+        fprintf(stdout, "%s: pclose\n", __FUNCTION__);
+        ret=0;
+    }
 	return ret;
 }
 
