@@ -15,15 +15,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-
+#ifndef PPP_SUPPORT
 #define NET_IF_NUM 1
 #define IFNAME0 'e'
 #define IFNAME1 '0'
 
 struct netif xnetif[NET_IF_NUM]; /* network interface structure */
 static ip_addr_t ipaddr, netmask, gw;
-
-unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
 
 //
 //  function: init_netifs
@@ -45,6 +43,9 @@ init_netifs(void)
     printf("mask %s ", ip4addr_ntoa(netif_ip4_netmask(&xnetif[idx])));
     printf("gateway %s\n", ip4addr_ntoa(netif_ip4_gw(&xnetif[idx])));
 }
+#endif
+// not define PPP_SUPPORT
+
 
 //
 //  function: tcpip_init_done
@@ -55,9 +56,10 @@ tcpip_init_done(void *arg)
 {
   sys_sem_t *sem;
   sem = (sys_sem_t *)arg;
-
-  init_netifs();
-
+  printf("TCP/IP initialized.\n");
+#ifndef PPP_SUPPORT
+    init_netifs();
+#endif
   sys_sem_signal(sem);
 }
 
@@ -77,9 +79,11 @@ LwIP_Init(void)
     }
     tcpip_init(tcpip_init_done, &sem);
     sys_sem_wait(&sem);
-    
-    printf("TCP/IP initialized.\n");
+#ifdef PPP_SUPPORT    
+    return NULL;
+#else    
     return &xnetif[0];
+#endif
 }
 
 //

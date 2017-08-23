@@ -26,9 +26,40 @@
 #include "AsyncIO/AsyncIOSerial.h"
 
 // network interface
+#include "lwipopts.h"
 #include "lwip/err.h"
 #include "ethernetif.h"
+#if PPP_SUPPORT
+#include "netif/ppp/ppp.h"
+#include "netif/ppp/pppos.h"
+#include "netif/ppp/pppapi.h"
+#endif
 
+#define MAX_PKT_SIZE    1520
+#define MAX_BAUD_NUM    4
+#define DEVICE_NAME_LEN 64
+
+static int u2w_on=0;
+static xQueueHandle xSerialRxQueue;
+static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB1";
+static int iSerialReceive = 0;
+static xTaskHandle hSerialTask;
+const char *baudstr[MAX_BAUD_NUM]= {"9600","38400","57600","115200"};
+const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200};
+int baudid=1;
+unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
+
+#if PPP_SUPPORT
+const char *PPP_User = "test";
+const char *PPP_Pass = "test";
+
+/* The PPP control block */
+ppp_pcb *ppp;
+/* The PPP IP interface */
+struct netif ppp_netif;
+static int exit_ppp = 0;
+#else
+// not PPP_SUPPORT
 struct _ethseg_msg_
 {
     unsigned char start;
@@ -37,25 +68,212 @@ struct _ethseg_msg_
     unsigned char  buf[0];
 };
 
-#define DEVICE_NAME_LEN 64
-#define MAX_PKT_SIZE    1520
 #define MAX_MSG_SIZE    (MAX_PKT_SIZE-(sizeof(struct _ethseg_msg_)+2))
 #define START_ID        0xf0
-#define MAX_BAUD_NUM    4
 
-static int u2w_on=0;
-static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB1";
-static int iSerialReceive = 0;
-static xTaskHandle hSerialTask;
-static xQueueHandle xSerialRxQueue;
 static xSemaphoreHandle uart_tx_sem =	NULL;
 static unsigned int eth_seg_tx_count=0, eth_seg_rx_count=0, eth_seg_rx_err=0, eth_seg_rx_drop=0;
 static unsigned char eth_seg_state=0, txbuf[MAX_PKT_SIZE];
-const char *baudstr[MAX_BAUD_NUM]= {"9600","38400","57600","115200"};
-const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200};
-int baudid=1;
-extern unsigned short CRC16(unsigned char *puchMsg, unsigned short usDataLen);
 
+extern unsigned short CRC16(unsigned char *puchMsg, unsigned short usDataLen);
+#endif
+// end of PPP_SUPPORT
+
+
+#if PPP_SUPPORT
+
+/* PPP status callback example */
+static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
+{
+    struct netif *pppif = ppp_netif(pcb);
+    LWIP_UNUSED_ARG(ctx);
+
+    switch (err_code) 
+    {
+        case PPPERR_NONE: {
+#if LWIP_DNS
+            const ip_addr_t *ns;
+#endif /* LWIP_DNS */            
+            printf("status_cb: Connected\n");
+#if PPP_IPV4_SUPPORT
+            printf("   our_ipaddr  = %s\n", ipaddr_ntoa(&pppif->ip_addr));
+            printf("   his_ipaddr  = %s\n", ipaddr_ntoa(&pppif->gw));
+            printf("   netmask     = %s\n", ipaddr_ntoa(&pppif->netmask));
+    #if LWIP_DNS
+            ns = dns_getserver(0);
+            printf("   dns1        = %s\n", ipaddr_ntoa(ns));
+            ns = dns_getserver(1);
+            printf("   dns2        = %s\n", ipaddr_ntoa(ns));
+    #endif /* LWIP_DNS */            
+#endif /* PPP_IPV4_SUPPORT */
+#if PPP_IPV6_SUPPORT
+            printf("   our6_ipaddr = %s\n", ip6addr_ntoa(netif_ip6_addr(pppif, 0)));
+#endif /* PPP_IPV6_SUPPORT */
+
+            break;
+        }
+        case PPPERR_PARAM: {
+            printf( "status_cb: Invalid parameter\n");
+            break;
+        }
+        case PPPERR_OPEN: {
+            printf( "status_cb: Unable to open PPP session\n");
+            break;
+        }
+        case PPPERR_DEVICE: {
+            printf( "status_cb: Invalid I/O device for PPP\n");
+            break;
+        }
+        case PPPERR_ALLOC: {
+            printf( "status_cb: Unable to allocate resources\n");
+            break;
+        }
+        case PPPERR_USER: {
+            printf( "status_cb: User interrupt\n");
+            break;
+        }
+        case PPPERR_CONNECT: {
+            printf( "status_cb: Connection lost\n");
+            break;
+        }
+        case PPPERR_AUTHFAIL: {
+            printf( "status_cb: Failed authentication challenge\n");
+            break;
+        }
+        case PPPERR_PROTOCOL: {
+            printf( "status_cb: Failed to meet protocol\n");
+            break;
+        }
+        case PPPERR_PEERDEAD: {
+            printf( "status_cb: Connection timeout\n");
+            break;
+        }
+        case PPPERR_IDLETIMEOUT: {
+            printf( "status_cb: Idle Timeout\n");
+            break;
+        }
+        case PPPERR_CONNECTTIME: {
+            printf( "status_cb: Max connect time reached\n");
+            break;
+        }
+        case PPPERR_LOOPBACK: {
+            printf( "status_cb: Loopback detected\n");
+            break;
+        }
+        default: {
+            printf( "status_cb: Unknown error code %d\n", err_code);
+            break;
+        }
+    }   // end switch
+
+    /*
+     * This should be in the switch case, this is put outside of the switch
+     * case for example readability.
+     */
+
+    if (err_code == PPPERR_NONE) {
+        return;
+    }
+
+    /* ppp_close() was previously called, don't reconnect */
+    if (err_code == PPPERR_USER) {
+        /* ppp_free(); -- can be called here */
+        return;
+    }
+
+
+    /*
+     * Try to reconnect in 30 seconds, if you need a modem chatscript you have
+     * to do a much better signaling here ;-)
+     */
+    ppp_connect(pcb, 30);
+    /* OR ppp_listen(pcb); */
+}
+
+static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
+{
+    printf("PPP tx len %d", len);
+    return write(iSerialReceive, data, len);
+    //return uart_write_bytes(uart_num, (const char *)data, len);
+}
+
+//
+//  function: pppos_client_thread
+//      main function to process the recvived PPP packet from uart device 
+//  parameters
+//      argc:   1
+//      argv:   none
+//
+void pppos_client_thread( void *pvParameters )
+{
+    xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
+    char data[MAX_PKT_SIZE];
+    u8_t nocarrier = 0;
+    int len;
+    
+    // do Lwip init (include PPP)
+    LwIP_Init();
+    
+    // init PPP over serial
+    ppp = pppos_create(&ppp_netif,
+        ppp_output_callback, ppp_status_cb, NULL);
+
+    printf("After pppapi_pppos_create");
+
+    if (ppp == NULL) {
+        printf("Error init pppos");
+        goto end_ppp_client;
+    }
+
+    ppp_set_default(ppp);
+
+    /* Ask the peer for up to 2 DNS server addresses. */
+    //ppp_set_usepeerdns(ppp, 1);
+
+    printf("After ppp_set_default");
+
+    ppp_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
+
+    printf("After ppp_set_auth");
+
+    ppp_connect(ppp, 0);
+
+    printf("After ppp_connect");
+    
+    exit_ppp = 0;
+    
+    while (1) {
+        memset(data, 0, MAX_PKT_SIZE);
+        len = 0;
+        for ( ;; )
+        {   
+            // repeat read data and use timeout to exit
+            if ( pdFALSE == xQueueReceive( hSerialRxQueue, &data[len], 10 ) )  // wait more the 10ms, expired
+                break;  
+            len++;
+            if (len>=MAX_PKT_SIZE)
+                break;
+        }
+        if (exit_ppp)
+            break;
+        if (len > 0) {
+            printf("PPP rx len %d", len);
+            pppos_input_tcpip(ppp, (u8_t *)data, len);
+        }
+     }  // end while
+     
+end_ppp_client:
+    if (ppp)
+    {
+        ppp_close(ppp, nocarrier);   
+        ppp_free(ppp);
+    }
+    printf( "%s Task exiting.\n",__FUNCTION__ );
+    hSerialTask = NULL;
+    vTaskDelete( NULL );
+}
+
+#else
 //
 //  function: uart_rx_process
 //      main function to process the recv characters from uart device
@@ -164,6 +382,7 @@ void uart_rx_process( void *pvParameters )
 end_uart_rx_process:
     /* Port wasn't opened. */
     printf( "%s Task exiting.\n",__FUNCTION__ );
+    hSerialTask = NULL;
     vTaskDelete( NULL );
 }
 
@@ -218,6 +437,8 @@ void uart_tx_process(char type, int len, char *data)
     eth_seg_tx_count++;
     xSemaphoreGive(uart_tx_sem);
 }
+#endif
+// end of PPP_SUPPORT
 
 //
 //  function: exit_u2w
@@ -234,6 +455,9 @@ void exit_u2w()
         close(iSerialReceive);
         printf("Close %s!",devname);
         iSerialReceive = 0;
+#if PPP_SUPPORT        
+        exit_ppp = 1;
+#endif        
     }
 }
 
@@ -248,7 +472,13 @@ void exit_u2w()
 void cmd_stat(int argc, char* argv[])
 {
     printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
+#if PPP_SUPPORT    
+
+#else
+// not PPP_SUPPORT
     printf("Tx %d, Rx %d, Error %d, Drop %d\n",eth_seg_tx_count, eth_seg_rx_count, eth_seg_rx_err, eth_seg_rx_drop);
+#endif
+// PPP_SUPPORT
 }
 
 //
@@ -266,14 +496,14 @@ void cmd_on(int argc, char* argv[])
         printf("Actived!");
         return;
     }
-
+#if !PPP_SUPPORT
     uart_tx_sem =  xSemaphoreCreateMutex();
     if (uart_tx_sem == NULL)
     {
         printf("strat uart Tx semaphore fail\n");
         return;
     }
-
+#endif
     // open uart device
     if ( pdTRUE == lAsyncIOSerialOpen( devname, &iSerialReceive,  baudrate[baudid]) )
     {
@@ -281,10 +511,16 @@ void cmd_on(int argc, char* argv[])
         (void)lAsyncIORegisterCallback( iSerialReceive, vAsyncSerialIODataAvailableISR,
                                         xSerialRxQueue );
         printf("Open device %s success\n",devname);
+#if PPP_SUPPORT  
+        xTaskCreate( pppos_client_thread, "uartrx", 4096, xSerialRxQueue,
+                     tskIDLE_PRIORITY + 4, &hSerialTask );
+#else
         /* Create a Task which waits to receive bytes. */
         xTaskCreate( uart_rx_process, "uartrx", 4096, xSerialRxQueue,
                      tskIDLE_PRIORITY + 4, &hSerialTask );
+#endif                     
         u2w_on = 1;
+        
     }
 }
 
@@ -299,7 +535,7 @@ void cmd_on(int argc, char* argv[])
 void cmd_off(int argc, char* argv[])
 {
     u2w_on = 0;
-    printf("has not implement %s\n",__FUNCTION__);
+    printf("turn off %s\n",__FUNCTION__);
 }
 
 //
@@ -352,7 +588,7 @@ void cmd_cfg(int argc, char* argv[])
 //      argc:   1
 //      argv:   none
 //
-
+#if !PPP_SUPPORT 
 void cmd_xmt(int argc, char* argv[])
 {
     if (argc>1)
@@ -360,3 +596,4 @@ void cmd_xmt(int argc, char* argv[])
     else
         printf("No argument!\nUsage: %s\n",curr_cmd->usage);
 }
+#endif

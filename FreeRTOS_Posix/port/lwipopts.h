@@ -450,6 +450,11 @@
 
 #define LWIP_SO_SNDRCVTIMEO_NONSTANDARD 1
 
+// add by kenny, turn on PPP support
+#define PPP_SUPPORT                     1
+#define PAP_SUPPORT                     1
+#define CHAP_SUPPORT                    1
+
 extern unsigned char debug_flags;
 #define LWIP_DBG_TYPES_ON debug_flags
 

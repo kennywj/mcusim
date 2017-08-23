@@ -15,7 +15,7 @@
 #include "lwip/inet_chksum.h"
 #include "lwip/sockets.h"
 #include "lwip/inet.h"
-
+#include "lwip/debug.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"

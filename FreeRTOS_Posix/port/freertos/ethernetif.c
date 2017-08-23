@@ -128,11 +128,11 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
     
     // copy to a linear buffer
     pbuf_copy_partial(p, buf, p->tot_len, 0);
-    
+#if !PPP_SUPPORT    
     //dump_frame("low_level_output:", buf, p->tot_len);
     // output the packet
     uart_tx_process(0, p->tot_len, buf);
-
+#endif
 	return ERR_OK;
 }
 
