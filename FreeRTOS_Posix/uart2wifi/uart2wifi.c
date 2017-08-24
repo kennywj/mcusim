@@ -249,6 +249,8 @@ void pppos_client_thread( void *pvParameters )
         {   
             // repeat read data and use timeout to exit
             if ( pdFALSE == xQueueReceive( hSerialRxQueue, &data[len], 10 ) )  // wait more the 10ms, expired
+                break;
+            if (exit_ppp)
                 break;  
             len++;
             if (len>=MAX_PKT_SIZE)
@@ -452,12 +454,13 @@ void exit_u2w()
 {
     if (u2w_on)
     {
+#if PPP_SUPPORT        
+        exit_ppp = 1;
+        sleep(1);   // sleep 1 second
+#endif        
         close(iSerialReceive);
         printf("Close %s!",devname);
         iSerialReceive = 0;
-#if PPP_SUPPORT        
-        exit_ppp = 1;
-#endif        
     }
 }
 
@@ -534,6 +537,7 @@ void cmd_on(int argc, char* argv[])
 
 void cmd_off(int argc, char* argv[])
 {
+    exit_u2w();
     u2w_on = 0;
     printf("turn off %s\n",__FUNCTION__);
 }
