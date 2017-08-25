@@ -29,6 +29,7 @@
 #include "lwipopts.h"
 #include "lwip/err.h"
 #include "ethernetif.h"
+
 #if PPP_SUPPORT
 #include "netif/ppp/ppp.h"
 #include "netif/ppp/pppos.h"
@@ -49,6 +50,8 @@ const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200};
 int baudid=1;
 unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
 
+extern struct netif *LwIP_Init(void);
+
 #if PPP_SUPPORT
 const char *PPP_User = "test";
 const char *PPP_Pass = "test";
@@ -57,7 +60,7 @@ const char *PPP_Pass = "test";
 ppp_pcb *ppp;
 /* The PPP IP interface */
 struct netif ppp_netif;
-static int exit_ppp = 0;
+static int exit_ppp = 0, ppp_type =0;   // 0:client 1:server
 #else
 // not PPP_SUPPORT
 struct _ethseg_msg_
@@ -186,13 +189,14 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
      * Try to reconnect in 30 seconds, if you need a modem chatscript you have
      * to do a much better signaling here ;-)
      */
-    ppp_connect(pcb, 30);
+    if (ppp_type==0)
+        ppp_connect(pcb, 30);
     /* OR ppp_listen(pcb); */
 }
 
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 {
-    printf("PPP tx len %d", len);
+    dump_frame(data,len,"PPP tx len %d\n");
     return write(iSerialReceive, data, len);
     //return uart_write_bytes(uart_num, (const char *)data, len);
 }
@@ -213,15 +217,17 @@ void pppos_client_thread( void *pvParameters )
     
     // do Lwip init (include PPP)
     LwIP_Init();
+
+    printf("PPP client\n");
     
     // init PPP over serial
     ppp = pppos_create(&ppp_netif,
         ppp_output_callback, ppp_status_cb, NULL);
 
-    printf("After pppapi_pppos_create");
+    printf("After pppapi_pppos_create\n");
 
     if (ppp == NULL) {
-        printf("Error init pppos");
+        printf("Error init pppos\n");
         goto end_ppp_client;
     }
 
@@ -230,15 +236,15 @@ void pppos_client_thread( void *pvParameters )
     /* Ask the peer for up to 2 DNS server addresses. */
     //ppp_set_usepeerdns(ppp, 1);
 
-    printf("After ppp_set_default");
+    printf("After ppp_set_default\n");
 
     ppp_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
 
-    printf("After ppp_set_auth");
+    printf("After ppp_set_auth\n");
 
     ppp_connect(ppp, 0);
 
-    printf("After ppp_connect");
+    printf("After ppp_connect\n");
     
     exit_ppp = 0;
     
@@ -259,7 +265,7 @@ void pppos_client_thread( void *pvParameters )
         if (exit_ppp)
             break;
         if (len > 0) {
-            printf("PPP rx len %d", len);
+            dump_frame(data,len,"PPP rx len %d\n");
             pppos_input_tcpip(ppp, (u8_t *)data, len);
         }
      }  // end while
@@ -274,6 +280,122 @@ end_ppp_client:
     hSerialTask = NULL;
     vTaskDelete( NULL );
 }
+
+
+
+//
+//  function: pppos_server_thread
+//      act as a PPP server
+//      main function to process the recvived PPP packet from uart device 
+//  parameters
+//      argc:   1
+//      argv:   none
+//
+void pppos_server_thread( void *pvParameters )
+{
+    xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
+    char data[MAX_PKT_SIZE];
+    u8_t nocarrier = 0;
+    int len;
+    
+    // do Lwip init (include PPP)
+    LwIP_Init();
+    
+    // init PPP over serial
+    ppp = pppos_create(&ppp_netif,
+        ppp_output_callback, ppp_status_cb, NULL);
+
+    printf("After pppapi_pppos_create\n");
+
+    if (ppp == NULL) {
+        printf("Error init pppos\n");
+        goto end_ppp_server;
+    }
+    
+    /*
+    * Basic PPP server configuration. Can only be set if PPP session is in the
+    * dead state (i.e. disconnected). We don't need to provide thread-safe
+    * equivalents through PPPAPI because those helpers are only changing
+    * structure members while session is inactive for lwIP core. Configuration
+    * only need to be done once.
+    */
+    ip4_addr_t addr;
+
+    printf("PPP server\n");
+    /* Set our address */
+    IP4_ADDR(&addr, 192,168,0,1);
+    ppp_set_ipcp_ouraddr(ppp, &addr);
+
+    /* Set peer(his) address */
+    IP4_ADDR(&addr, 192,168,0,2);
+    ppp_set_ipcp_hisaddr(ppp, &addr);
+#if LWIP_DNS
+    /* Set primary DNS server */
+    IP4_ADDR(&addr, 192,168,10,20);
+    ppp_set_ipcp_dnsaddr(ppp, 0, &addr);
+
+    /* Set secondary DNS server */
+    IP4_ADDR(&addr, 192,168,10,21);
+    ppp_set_ipcp_dnsaddr(ppp, 1, &addr);
+#endif
+    /* Auth configuration, this is pretty self-explanatory */
+    ppp_set_auth(ppp, PPPAUTHTYPE_ANY, "login", "password");
+
+    /* Require peer to authenticate */
+    ppp_set_auth_required(ppp, 1);
+
+    /*
+    * Only for PPPoS, the PPP session should be up and waiting for input.
+    *
+    * Note: for PPPoS, ppp_connect() and ppp_listen() are actually the same thing.
+    * The listen call is meant for future support of PPPoE and PPPoL2TP server
+    * mode, where we will need to negotiate the incoming PPPoE session or L2TP
+    * session before initiating PPP itself. We need this call because there is
+    * two passive modes for PPPoS, ppp_set_passive and ppp_set_silent.
+    */
+    ppp_set_silent(ppp, 1);
+
+    /*
+    * Initiate PPP listener (i.e. wait for an incoming connection), can only
+    * be called if PPP session is in the dead state (i.e. disconnected).
+    */
+    ppp_listen(ppp);
+
+    exit_ppp = 0;
+    
+    while (1) {
+        memset(data, 0, MAX_PKT_SIZE);
+        len = 0;
+        for ( ;; )
+        {   
+            // repeat read data and use timeout to exit
+            if ( pdFALSE == xQueueReceive( hSerialRxQueue, &data[len], 10 ) )  // wait more the 10ms, expired
+                break;
+            if (exit_ppp)
+                break;  
+            len++;
+            if (len>=MAX_PKT_SIZE)
+                break;
+        }
+        if (exit_ppp)
+            break;
+        if (len > 0) {
+            dump_frame(data,len,"PPP rx len %d\n");
+            pppos_input_tcpip(ppp, (u8_t *)data, len);
+        }
+     }  // end while
+end_ppp_server:
+    if (ppp)
+    {
+        ppp_close(ppp, nocarrier);   
+        ppp_free(ppp);
+    }
+
+    printf( "%s Task exiting.\n",__FUNCTION__ );
+    hSerialTask = NULL;
+    vTaskDelete( NULL );    
+}
+
 
 #else
 //
@@ -291,7 +413,7 @@ void uart_rx_process( void *pvParameters )
     unsigned short off=0, len, crc, msgcrc;
     struct netif *uartif=NULL;
     int ret;
-    extern struct netif *LwIP_Init(void);
+    
 
     if ( NULL != hSerialRxQueue )
     {
@@ -514,8 +636,12 @@ void cmd_on(int argc, char* argv[])
         (void)lAsyncIORegisterCallback( iSerialReceive, vAsyncSerialIODataAvailableISR,
                                         xSerialRxQueue );
         printf("Open device %s success\n",devname);
-#if PPP_SUPPORT  
-        xTaskCreate( pppos_client_thread, "uartrx", 4096, xSerialRxQueue,
+#if PPP_SUPPORT 
+        if (ppp_type)
+            xTaskCreate( pppos_server_thread, "ppp_server", 4096, xSerialRxQueue,
+                     tskIDLE_PRIORITY + 4, &hSerialTask );
+        else 
+            xTaskCreate( pppos_client_thread, "ppp_client", 4096, xSerialRxQueue,
                      tskIDLE_PRIORITY + 4, &hSerialTask );
 #else
         /* Create a Task which waits to receive bytes. */
@@ -557,9 +683,10 @@ void cmd_cfg(int argc, char* argv[])
     if (argc==1)
     {
         printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
+        printf("PPP %s\n",(ppp_type?"server":"client"));
         return;
     }
-    while((c=getopt(argc, argv, "p:b:")) != -1)
+    while((c=getopt(argc, argv, "p:b:t:")) != -1)
     {
         switch(c)
         {
@@ -577,6 +704,9 @@ void cmd_cfg(int argc, char* argv[])
                     break;
                 }
             }
+            break;
+        case 't':
+            ppp_type = atoi(optarg)&0x01;
             break;
         default:
             printf("wrong command!\n usgae: %s\n",curr_cmd->usage);

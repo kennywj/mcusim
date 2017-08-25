@@ -341,7 +341,7 @@ unsigned int get_time_milisec(void)
 //          0       success
 //          other   fail
 //
-int show_type = 2; // show words
+int show_type = 0; // show bytes
 #define MAX_FMT_SIZE 256
 void dump_frame(char *start, int len, const char * fmt, ...)
 {

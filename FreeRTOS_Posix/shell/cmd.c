@@ -11,7 +11,6 @@
 #include "cmd.h"
 #include "duktape.h"
 
-
 //
 // define command support by stystem
 //
@@ -20,9 +19,9 @@ struct cmd_tbl commands[]=
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
 	{"stat",    cmd_stat, "display uart2wifi status",           ""},
-	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  "-p <device> -b <baud>"},
-	{"on",      cmd_on,   "active uart device",                 ""},
-	{"off",     cmd_off,  "deactive uart device",               ""},
+	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  "-p <device> -b <baud> -t<type>(0:PPP client, 1:server)"},
+	{"on",      cmd_on,   "active uart device PPP active",                 ""},
+	{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
 	//{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
 	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
