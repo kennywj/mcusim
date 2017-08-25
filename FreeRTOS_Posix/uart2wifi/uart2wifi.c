@@ -380,7 +380,7 @@ void pppos_server_thread( void *pvParameters )
         if (exit_ppp)
             break;
         if (len > 0) {
-            dump_frame(data,len,"PPP rx len %d\n");
+            dump_frame(data,len,"PPP rx len %d\n",len);
             pppos_input_tcpip(ppp, (u8_t *)data, len);
         }
      }  // end while
