@@ -53,8 +53,8 @@ unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_
 extern struct netif *LwIP_Init(void);
 
 #if PPP_SUPPORT
-const char *PPP_User = "test";
-const char *PPP_Pass = "test";
+const char PPP_User[256] = "test";
+const char PPP_Pass[256] = "test";
 
 /* The PPP control block */
 ppp_pcb *ppp;
@@ -339,7 +339,7 @@ void pppos_server_thread( void *pvParameters )
     ppp_set_ipcp_dnsaddr(ppp, 1, &addr);
 #endif
     /* Auth configuration, this is pretty self-explanatory */
-    ppp_set_auth(ppp, PPPAUTHTYPE_ANY, "login", "password");
+    ppp_set_auth(ppp, PPPAUTHTYPE_ANY, PPP_User, PPP_Pass);
 
     /* Require peer to authenticate */
     ppp_set_auth_required(ppp, 1);
@@ -683,14 +683,22 @@ void cmd_cfg(int argc, char* argv[])
     if (argc==1)
     {
         printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
-        printf("PPP %s\n",(ppp_type?"server":"client"));
+        printf("PPP %s, username %s, password %s\n",(ppp_type?"server":"client",PPP_User,PPP_Pass));
         return;
     }
-    while((c=getopt(argc, argv, "p:b:t:")) != -1)
+    while((c=getopt(argc, argv, "d:b:m:u:p:")) != -1)
     {
         switch(c)
         {
-        case 'p':
+		case 'u':
+			strncpy(PPP_User,optarg,255);
+			printf("set username %s\n",PPP_User);
+			break;
+	    case 'p':
+			strncpy(PPP_Pass,optarg,255);
+			printf("set password %s\n",PPP_Pass);
+			break;
+        case 'd':
             strncpy(devname, optarg, DEVICE_NAME_LEN);
             printf("set device %s\n",devname);
             break;
@@ -705,8 +713,9 @@ void cmd_cfg(int argc, char* argv[])
                 }
             }
             break;
-        case 't':
+        case 'm':
             ppp_type = atoi(optarg)&0x01;
+            printf("set work mode PPP %s\n",ppp_type?"server":"client");
             break;
         default:
             printf("wrong command!\n usgae: %s\n",curr_cmd->usage);
