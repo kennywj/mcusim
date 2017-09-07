@@ -275,13 +275,7 @@ void pppos_client_thread( void *pvParameters )
                 else
                     frame_state = 0;
             break;
-            case 2: // wait 3 byte
-                if (ch==PPP_UI)
-                    frame_state = 3;
-                else
-                    frame_state = 0;
-            break;
-            case 3: // receive data bytes
+            case 2: // receive data bytes
                 // last frame bytes or length > maxmum buffer size
                 if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
                 {
@@ -414,12 +408,6 @@ void pppos_server_thread( void *pvParameters )
                     frame_state = 0;
             break;
             case 2:
-                if (ch==PPP_UI)
-                    frame_state = 3;
-                else
-                    frame_state = 0;
-            break;
-            case 3:
                 // last frame bytes or length > maxmum buffer size
                 if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
                 {
