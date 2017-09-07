@@ -34,6 +34,7 @@
 #include "netif/ppp/ppp.h"
 #include "netif/ppp/pppos.h"
 #include "netif/ppp/pppapi.h"
+#include "netif/ppp/ppp_impl.h"
 #endif
 
 #define MAX_PKT_SIZE    1520
@@ -60,7 +61,8 @@ const char PPP_Pass[256] = "test";
 ppp_pcb *ppp;
 /* The PPP IP interface */
 struct netif ppp_netif;
-static int exit_ppp = 0, ppp_type =0;   // 0:client 1:server
+static int exit_ppp = 0, ppp_type =0, frame_state=0;   // 0:client 1:server
+
 #else
 // not PPP_SUPPORT
 struct _ethseg_msg_
@@ -212,7 +214,7 @@ void pppos_client_thread( void *pvParameters )
 {
     xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
     char data[MAX_PKT_SIZE];
-    u8_t nocarrier = 0;
+    u8_t nocarrier = 0, ch;
     int len;
     
     // do Lwip init (include PPP)
@@ -247,29 +249,52 @@ void pppos_client_thread( void *pvParameters )
     printf("After ppp_connect\n");
     
     exit_ppp = 0;
-    
+    len = 0;
+    frame_state = 0;
     while (1) {
-        memset(data, 0, MAX_PKT_SIZE);
-        len = 0;
-        for ( ;; )
-        {   
-            // repeat read data and use timeout to exit
-            if ( pdFALSE == xQueueReceive( hSerialRxQueue, &data[len], 10 ) )  // wait more the 10ms, expired
-                break;
+        // repeat read data and use timeout to exit
+        if ( pdFALSE == xQueueReceive( hSerialRxQueue, &ch, 20 ) )  // wait more the 10ms, expired
+        {
             if (exit_ppp)
-                break;  
-            len++;
-            if (len>=MAX_PKT_SIZE)
                 break;
+            frame_state = 0;
+            len = 0;
+            continue;
         }
-        if (exit_ppp)
+          
+        data[len++]=ch;
+        switch(frame_state)
+        {
+            case 0: // wait first byte 0x7E
+                if (ch==PPP_FLAG)
+                    frame_state = 1;
             break;
-        if (len > 0) {
-            dump_frame(data,len,"PPP rx len %d\n");
-            pppos_input_tcpip(ppp, (u8_t *)data, len);
-        }
+            case 1: // wati second byte
+                if (ch==PPP_ALLSTATIONS)
+                    frame_state = 2;
+                else
+                    frame_state = 0;
+            break;
+            case 2: // wait 3 byte
+                if (ch==PPP_UI)
+                    frame_state = 3;
+                else
+                    frame_state = 0;
+            break;
+            case 3: // receive data bytes
+                // last frame bytes or length > maxmum buffer size
+                if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
+                {
+                    dump_frame(data,len,"PPP rx len %d\n",len);
+                    pppos_input_tcpip(ppp, (u8_t *)data, len);
+                    // start next frame
+                    frame_state = 0;
+                }
+            break;
+        }   // end of switch
+        if (frame_state==0)
+            len = 0;    
      }  // end while
-     
 end_ppp_client:
     if (ppp)
     {
@@ -295,7 +320,7 @@ void pppos_server_thread( void *pvParameters )
 {
     xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
     char data[MAX_PKT_SIZE];
-    u8_t nocarrier = 0;
+    u8_t nocarrier = 0, ch;
     int len;
     
     // do Lwip init (include PPP)
@@ -362,27 +387,51 @@ void pppos_server_thread( void *pvParameters )
     ppp_listen(ppp);
 
     exit_ppp = 0;
-    
+    len = 0;
+    frame_state = 0;
     while (1) {
-        memset(data, 0, MAX_PKT_SIZE);
-        len = 0;
-        for ( ;; )
-        {   
-            // repeat read data and use timeout to exit
-            if ( pdFALSE == xQueueReceive( hSerialRxQueue, &data[len], 10 ) )  // wait more the 10ms, expired
-                break;
+        // repeat read data and use timeout to exit
+        if ( pdFALSE == xQueueReceive( hSerialRxQueue, &ch, 20 ) )  // wait more the 10ms, expired
+        {
             if (exit_ppp)
-                break;  
-            len++;
-            if (len>=MAX_PKT_SIZE)
                 break;
+            frame_state = 0;
+            len = 0;
+            continue;
         }
-        if (exit_ppp)
+          
+        data[len++]=ch;
+        switch(frame_state)
+        {
+            case 0: // first byte 0x7E
+                if (ch==PPP_FLAG)
+                    frame_state = 1;
             break;
-        if (len > 0) {
-            dump_frame(data,len,"PPP rx len %d\n",len);
-            pppos_input_tcpip(ppp, (u8_t *)data, len);
-        }
+            case 1: 
+                if (ch==PPP_ALLSTATIONS)
+                    frame_state = 2;
+                else
+                    frame_state = 0;
+            break;
+            case 2:
+                if (ch==PPP_UI)
+                    frame_state = 3;
+                else
+                    frame_state = 0;
+            break;
+            case 3:
+                // last frame bytes or length > maxmum buffer size
+                if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
+                {
+                    dump_frame(data,len,"PPP rx len %d\n",len);
+                    pppos_input_tcpip(ppp, (u8_t *)data, len);
+                    // start next frame
+                    frame_state = 0;
+                }
+            break;
+        }   // end of switch
+        if (frame_state==0)
+            len = 0;    
      }  // end while
 end_ppp_server:
     if (ppp)
