@@ -720,7 +720,7 @@ void cmd_cfg(int argc, char* argv[])
     if (argc==1)
     {
         printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
-        printf("PPP %s, username %s, password %s\n",(ppp_type?"server":"client",PPP_User,PPP_Pass));
+        printf("PPP %s, username %s, password %s\n",(ppp_type?"server":"client"),PPP_User,PPP_Pass);
         return;
     }
     while((c=getopt(argc, argv, "d:b:m:u:p:")) != -1)
