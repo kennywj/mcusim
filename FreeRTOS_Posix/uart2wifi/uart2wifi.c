@@ -266,6 +266,13 @@ void pppos_client_thread( void *pvParameters )
             case 0: // wait first byte 0x7E
                 if (ch==PPP_FLAG)
                     frame_state = 1;
+                else if (ch==PPP_ALLSTATIONS)
+                {
+                    frame_state = 2;
+                    data[0]=PPP_FLAG;
+                    data[1]=PPP_ALLSTATIONS;
+                    len = 2;
+                }
                 else
                     len = 0;
             break;
@@ -282,22 +289,10 @@ void pppos_client_thread( void *pvParameters )
                 // last frame bytes or length > maxmum buffer size
                 if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
                 {
-                    // start next frame
-                    if (ch == PPP_FLAG)
-                    {
-                        len -=1;
-                        dump_frame(data,len,"PPP rx len %d\n",len);
-                        pppos_input_tcpip(ppp, (u8_t *)data, len);
-                        data[0]=ch;
-                        len = 1;
-                        frame_state = 1;
-                    }
-                    else
-                    {
-                        dump_frame(data,len,"PPP rx len %d overflow\n",len);
-                        frame_state = 0;
-                        len = 0;
-                    }
+                    dump_frame(data,len,"PPP rx len %d\n",len);
+                    pppos_input_tcpip(ppp, (u8_t *)data, len);
+                    frame_state = 0;
+                    len = 0;
                 }
             break;
         }   // end of switch
@@ -408,9 +403,16 @@ void pppos_server_thread( void *pvParameters )
         data[len++]=ch;
         switch(frame_state)
         {
-            case 0: // first byte 0x7E
+            case 0: // first byte 0x7E, or 0XFF
                 if (ch==PPP_FLAG)
                     frame_state = 1;
+                else if (ch==PPP_ALLSTATIONS)
+                {
+                    frame_state = 2;
+                    data[0]=PPP_FLAG;
+                    data[1]=PPP_ALLSTATIONS;
+                    len = 2;
+                }
                 else
                     len = 0;
             break;
@@ -427,22 +429,11 @@ void pppos_server_thread( void *pvParameters )
                 // last frame bytes or length > maxmum buffer size
                 if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
                 {
+                    dump_frame(data,len,"PPP rx len %d\n",len);
+                    pppos_input_tcpip(ppp, (u8_t *)data, len);
                     // start next frame
-                    if (ch==PPP_FLAG)
-                    {
-                       len -=1;
-                       dump_frame(data,len,"PPP rx len %d\n",len);
-                       pppos_input_tcpip(ppp, (u8_t *)data, len);
-                       data[0]=ch;
-                       len = 1;
-                       frame_state = 1;
-                    }
-                    else
-                    {
-                        dump_frame(data,len,"PPP rx len %d overflow\n",len);
-                        frame_state = 0;
-                        len =0;
-                    }
+                    frame_state = 0;
+                    len =0;
                 }
             break;
         }   // end of switch
