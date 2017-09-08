@@ -181,10 +181,11 @@ void ping_thread( void *arg )
     {
         if (ping_send(s, &ping_target) == ERR_OK)
         {
+			
             LWIP_DEBUGF( PING_DEBUG, ("ping: send "));
             ip_addr_debug_print(PING_DEBUG, &ping_target);
-            LWIP_DEBUGF( PING_DEBUG, ("\n"));
-
+            LWIP_DEBUGF( PING_DEBUG, (" %d\n", count));
+			
             ping_time = sys_now();
             ping_recv(s);
         }
@@ -228,9 +229,9 @@ void cmd_ping(int argc, char* argv[])
             return;
         }
     }   // end while
-    if (argc > 1 && hPingTask==NULL)
+    if (optind < argc  && hPingTask==NULL)
     {
-        xTaskCreate( ping_thread, "ping", configMINIMAL_STACK_SIZE, argv[1], tskIDLE_PRIORITY + 1, &hPingTask );
+        xTaskCreate( ping_thread, "ping", configMINIMAL_STACK_SIZE, argv[optind], tskIDLE_PRIORITY + 1, &hPingTask );
     }
     else
         printf("ping is working\n");

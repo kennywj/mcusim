@@ -259,9 +259,19 @@ void pppos_client_thread( void *pvParameters )
                 break;
             continue;
         }
-          
+        
+        if (ch==PPP_FLAG)
+        {
+			if (len>1)
+			{
+				data[len++]=ch;	// end of frame
+				dump_frame(data,len,"PPP rx len %d\n",len);
+                pppos_input_tcpip(ppp, (u8_t *)data, len);
+			}
+			len = 0;
+		}    
         data[len++]=ch;
-        switch(frame_state)
+        /*switch(frame_state)
         {
             case 0: // wait first byte 0x7E
                 if (ch==PPP_FLAG)
@@ -296,6 +306,7 @@ void pppos_client_thread( void *pvParameters )
                 }
             break;
         }   // end of switch
+        */
      }  // end while
 end_ppp_client:
     if (ppp)
@@ -399,9 +410,20 @@ void pppos_server_thread( void *pvParameters )
                 break;
             continue;
         }
-          
+        
+        if (ch==PPP_FLAG)
+        {
+			if (len>1)
+			{
+				data[len++]=ch;	// end of frame
+				dump_frame(data,len,"PPP rx len %d\n",len);
+                pppos_input_tcpip(ppp, (u8_t *)data, len);
+			}
+			len = 0;
+		}  
         data[len++]=ch;
-        switch(frame_state)
+        
+        /*switch(frame_state)
         {
             case 0: // first byte 0x7E, or 0XFF
                 if (ch==PPP_FLAG)
@@ -437,6 +459,7 @@ void pppos_server_thread( void *pvParameters )
                 }
             break;
         }   // end of switch
+        */
      }  // end while
 end_ppp_server:
     if (ppp)
