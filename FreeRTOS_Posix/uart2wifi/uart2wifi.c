@@ -271,42 +271,8 @@ void pppos_client_thread( void *pvParameters )
 			len = 0;
 		}    
         data[len++]=ch;
-        /*switch(frame_state)
-        {
-            case 0: // wait first byte 0x7E
-                if (ch==PPP_FLAG)
-                    frame_state = 1;
-                else if (ch==PPP_ALLSTATIONS)
-                {
-                    frame_state = 2;
-                    data[0]=PPP_FLAG;
-                    data[1]=PPP_ALLSTATIONS;
-                    len = 2;
-                }
-                else
-                    len = 0;
-            break;
-            case 1: // wati second byte
-                if (ch==PPP_ALLSTATIONS)
-                    frame_state = 2;
-                else
-                {
-                    frame_state = 0;
-                    len = 0;
-                }
-            break;
-            case 2: // receive data bytes
-                // last frame bytes or length > maxmum buffer size
-                if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
-                {
-                    dump_frame(data,len,"PPP rx len %d\n",len);
-                    pppos_input_tcpip(ppp, (u8_t *)data, len);
-                    frame_state = 0;
-                    len = 0;
-                }
-            break;
-        }   // end of switch
-        */
+        if (len>=MAX_PKT_SIZE)
+            len = MAX_PKT_SIZE-1;
      }  // end while
 end_ppp_client:
     if (ppp)
@@ -398,7 +364,7 @@ void pppos_server_thread( void *pvParameters )
     * be called if PPP session is in the dead state (i.e. disconnected).
     */
     ppp_listen(ppp);
-
+    printf("PPP server ready, waiting connect from client\n");
     exit_ppp = 0;
     len = 0;
     frame_state = 0;
@@ -422,44 +388,8 @@ void pppos_server_thread( void *pvParameters )
 			len = 0;
 		}  
         data[len++]=ch;
-        
-        /*switch(frame_state)
-        {
-            case 0: // first byte 0x7E, or 0XFF
-                if (ch==PPP_FLAG)
-                    frame_state = 1;
-                else if (ch==PPP_ALLSTATIONS)
-                {
-                    frame_state = 2;
-                    data[0]=PPP_FLAG;
-                    data[1]=PPP_ALLSTATIONS;
-                    len = 2;
-                }
-                else
-                    len = 0;
-            break;
-            case 1: 
-                if (ch==PPP_ALLSTATIONS)
-                    frame_state = 2;
-                else
-                {
-                    frame_state = 0;
-                    len = 0;
-                }
-            break;
-            case 2:
-                // last frame bytes or length > maxmum buffer size
-                if (ch==PPP_FLAG || len >= MAX_PKT_SIZE)
-                {
-                    dump_frame(data,len,"PPP rx len %d\n",len);
-                    pppos_input_tcpip(ppp, (u8_t *)data, len);
-                    // start next frame
-                    frame_state = 0;
-                    len =0;
-                }
-            break;
-        }   // end of switch
-        */
+        if (len>=MAX_PKT_SIZE)
+            len = MAX_PKT_SIZE-1;
      }  // end while
 end_ppp_server:
     if (ppp)
