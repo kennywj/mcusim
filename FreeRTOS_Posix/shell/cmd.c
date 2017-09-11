@@ -19,7 +19,7 @@ struct cmd_tbl commands[]=
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
 	{"stat",    cmd_stat, "display uart2wifi status",           ""},
-	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  "-d <device> -b <baud> -m<type>(0:PPP client, 1:server), -u <username> -p <password>"},
+	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  "-d <device> -b <baud> -m<type>(0:PPP client, 1:server), -u <username> -p <password> -c (clear)"},
 	{"on",      cmd_on,   "active uart device PPP active",                 ""},
 	{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
 	//{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},

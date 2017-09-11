@@ -62,7 +62,7 @@ ppp_pcb *ppp;
 /* The PPP IP interface */
 struct netif ppp_netif;
 static int exit_ppp = 0, ppp_type =0, frame_state=0;   // 0:client 1:server
-
+unsigned int ppp_tx_pcnt, ppp_tx_bcnt, ppp_rx_pcnt, ppp_rx_bcnt;
 #else
 // not PPP_SUPPORT
 struct _ethseg_msg_
@@ -199,6 +199,8 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 {
     dump_frame(data,len,"PPP tx len %d\n");
+	ppp_tx_pcnt += 1;
+	ppp_tx_bcnt += len;
     return write(iSerialReceive, data, len);
     //return uart_write_bytes(uart_num, (const char *)data, len);
 }
@@ -260,12 +262,14 @@ void pppos_client_thread( void *pvParameters )
             continue;
         }
         
+		ppp_rx_bcnt += 1;
         if (ch==PPP_FLAG)
         {
 			if (len>1)
 			{
 				data[len++]=ch;	// end of frame
 				dump_frame(data,len,"PPP rx len %d\n",len);
+        		ppp_rx_pcnt += 1;
                 pppos_input_tcpip(ppp, (u8_t *)data, len);
 			}
 			len = 0;
@@ -377,12 +381,14 @@ void pppos_server_thread( void *pvParameters )
             continue;
         }
         
+		ppp_rx_bcnt += 1;
         if (ch==PPP_FLAG)
         {
 			if (len>1)
 			{
 				data[len++]=ch;	// end of frame
 				dump_frame(data,len,"PPP rx len %d\n",len);
+				ppp_rx_pcnt += 1;
                 pppos_input_tcpip(ppp, (u8_t *)data, len);
 			}
 			len = 0;
@@ -605,7 +611,8 @@ void cmd_stat(int argc, char* argv[])
 {
     printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
 #if PPP_SUPPORT    
-
+    printf("PPP %s Tx %d(%dB), Rx %d(%dB)\n",(ppp_type?"server":"client"),
+        ppp_tx_pcnt, ppp_tx_bcnt, ppp_rx_pcnt, ppp_rx_bcnt);
 #else
 // not PPP_SUPPORT
     printf("Tx %d, Rx %d, Error %d, Drop %d\n",eth_seg_tx_count, eth_seg_rx_count, eth_seg_rx_err, eth_seg_rx_drop);
@@ -693,7 +700,7 @@ void cmd_cfg(int argc, char* argv[])
         printf("PPP %s, username %s, password %s\n",(ppp_type?"server":"client"),PPP_User,PPP_Pass);
         return;
     }
-    while((c=getopt(argc, argv, "d:b:m:u:p:")) != -1)
+    while((c=getopt(argc, argv, "d:b:m:u:p:c")) != -1)
     {
         switch(c)
         {
@@ -724,6 +731,12 @@ void cmd_cfg(int argc, char* argv[])
             ppp_type = atoi(optarg)&0x01;
             printf("set work mode PPP %s\n",ppp_type?"server":"client");
             break;
+        case 'c':
+#if PPP_SUPPORT         
+            ppp_tx_pcnt= ppp_tx_bcnt= ppp_rx_pcnt= ppp_rx_bcnt =0;
+            printf("clear counters\n");
+            break;
+#endif            
         default:
             printf("wrong command!\n usgae: %s\n",curr_cmd->usage);
             return;
