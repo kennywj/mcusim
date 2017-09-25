@@ -24,7 +24,14 @@
 #include "AsyncIO/AsyncIO.h"
 
 #define MAX_ARGS 12
+#define MAX_HISTORY 32
+#define MAX_CMDLEN  255
+
 char args[MAX_ARGS + 1][65];
+// history buffer
+char history[MAX_HISTORY][MAX_CMDLEN+1];
+int history_id=0;
+
 struct termios saved_attributes;
 int do_exit =0;
 extern int parser(unsigned inflag,char *token,int tokmax,char *line,
@@ -208,14 +215,14 @@ unsigned char ch;
 //
 void do_console(void *parm)
 {
-    int ret,count=0;
-    char cmdbuf[256],*cmd, ch;
+    int ret,count=0,multi_keys=0;
+    char cmdbuf[MAX_CMDLEN+1]={0},*cmd, ch;
     xQueueHandle rcvq;
 
     // set stdin select, initial STDIN
     set_input_mode();
     // create a receive queue
-    rcvq = xQueueCreate( 256, sizeof ( unsigned char ) );
+    rcvq = xQueueCreate( MAX_CMDLEN, sizeof ( unsigned char ) );
     if (rcvq==NULL)
     {
         printf("create recv queue fail\n");
@@ -247,41 +254,93 @@ void do_console(void *parm)
 	                cmd = cmdbuf;
    	                while ( isblank( (int)*cmd ) )
        	                cmd++;
+       	            // record history    
+       	            strncpy(history[history_id++],cmd, strlen(cmd));
+       	            if (history_id>MAX_HISTORY)
+       	                history_id = 0;
+       	                
 			        if (do_command(cmd)<0)
 			            printf("unknown command '%s'\n", cmd);
 			        if (do_exit)
 			            break;  // exit while loop
 			    }
-			    memset(cmdbuf,0,256);
+			    memset(cmdbuf,0,MAX_CMDLEN);
 			    count=0;
+			    multi_keys=0;
    			    printf(">");      // prompt
 		    }
-		    else if ((ch >= ' ') && (ch < 127))		// got printable char
-	        {
-	            cmdbuf[count++]=ch;
-		        putchar(ch);
-	        }
-	        else if ((ch == 0x08 || ch==0x7f) && count)				// backspace
-	        {
-	            cmdbuf[count]='\0';
-                count--;
-        	    putchar(0x08);
-		        putchar(' ');
-		        putchar(0x08);
-	        }
-	        else if (ch == 0x1B)				// escape
-	        {
-		        while (count)					// reset buffer
+		    else
+		    {    
+		        switch(multi_keys)
 		        {
-			        count--;
-			        putchar(0x08);
-			        putchar(' ');
-			        putchar(0x08);
-		        }
-		        cmdbuf[0] = 0x1B;				// leave ESC in first byte
-		        cmdbuf[1] = 0;	
-		        // next char will overwrite ESC
-	        }
+		            case 1:
+		                if (ch == 0x5B)
+	                    {
+        	                multi_keys=2; 
+	                        cmdbuf[0] = 0x5B;				// ch = [
+		                    cmdbuf[1] = 0;
+		                }
+		                else
+		                   multi_keys=0; 
+		            break;
+		            case 2:
+		                if (ch == 0x41)
+		                {
+		                    history_id--;
+		                    if (history_id<0)
+		                        history_id = MAX_HISTORY-1;
+		                }    
+		                else if (ch == 0x42)
+		                {
+		                    history_id++;
+		                    if (history_id>=MAX_HISTORY)
+		                        history_id = 0;
+		                }    
+		                count = strlen(history[history_id]);
+		                if (count)
+		                {    
+		                    memset(cmdbuf,0,MAX_CMDLEN);
+		                    strncpy(cmdbuf,history[history_id],count);
+		                    printf("%s",cmdbuf);
+		                }
+  	                    multi_keys=0; 
+		            break;
+		            default:
+            		    if ((ch >= ' ') && (ch < 127))		// got printable char
+	                    {
+            	            if (count>=MAX_CMDLEN)
+	                            count--;
+            	            cmdbuf[count++]=ch;
+		                    putchar(ch);
+	                    }
+            	        else if ((ch == 0x08 || ch==0x7f) && count)				// backspace
+	                    {
+            	            if(count>0)
+	                        {    
+            	                cmdbuf[count]='\0';
+                                count--;
+                            }
+                    	    putchar(0x08);
+		                    putchar(' ');
+            		        putchar(0x08);
+	                    }
+            	        else if (ch == 0x1B)				// escape
+	                    {
+            		        while (count)					// reset buffer
+		                    {
+            			        count--;
+			                    putchar(0x08);
+            			        putchar(' ');
+			                    putchar(0x08);
+            		        }
+		                    cmdbuf[0] = 0x1B;				// leave ESC in first byte
+		                    cmdbuf[1] = 0;	
+		                    multi_keys=1; 
+		                    // next char will overwrite ESC
+	                    }
+	                break;    
+    	        }   // end switch
+    	    }   // end if    
 	        fflush(stdout);
         }
     }// end while

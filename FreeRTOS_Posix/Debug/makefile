@@ -46,7 +46,7 @@ all: FreeRTOS_Posix
 FreeRTOS_Posix: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -pthread -o"u2w" $(OBJS) $(USER_OBJS) $(LIBS) -lrt -lm
+	gcc -pthread -g -o"u2w" $(OBJS) $(USER_OBJS) $(LIBS) -lrt -lm
 	@echo 'Finished building target: $@'
 	@echo ' '
 
