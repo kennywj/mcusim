@@ -8,22 +8,24 @@ C_SRCS += \
 ../shell/console.c \
 ../shell/parser.c \
 ../shell/util.c \
-../shell/duktape/duktape.c
+../shell/duktape/duktape.c  \
+../shell/xmodem.c
 
 OBJS += \
 ./shell/cmd.o \
 ./shell/console.o \
 ./shell/parser.o \
 ./shell/util.o  \
-./shell/duktape/duktape.o
+./shell/duktape/duktape.o   \
+./shell/xmodem.o
 
 C_DEPS += \
 ./shell/cmd.d \
 ./shell/console.d \
 ./shell/parser.d \
 ./shell/util.d  \
-./shell/duktape/duktape.d
-
+./shell/duktape/duktape.d   \
+./shell/xmodem.d
 
 # Each subdirectory must supply rules for building sources it contributes
 shell/%.o: ../shell/%.c

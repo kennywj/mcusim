@@ -19,15 +19,21 @@ struct cmd_tbl commands[]=
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
 	{"stat",    cmd_stat, "display uart2wifi status",           ""},
-	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  "-d <device> -b <baud> -m<type>(0:PPP client, 1:server), -u <username> -p <password> -c (clear)"},
+	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  
+	    "-d <device> -b <baud> -m<type>(0:PPP client, 1:server),"
+	    "-u <username> -p <password> -c (clear)"},
 	{"on",      cmd_on,   "active uart device PPP active",                 ""},
 	{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
 	//{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
 	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
-	{"duk",     cmd_duk,  "Javascript script interpreter",      "-x\"<javascript script program string>\", -f\"<javacsript program file>\""},
+	{"duk",     cmd_duk,  "Javascript script interpreter",      
+	    "-x\"<javascript script program string>\", -f\"<javacsript program file>\""},
 	{"net",     cmd_net,  "display network information",        ""},
+	{"xmodem",  cmd_xmodem,  "xmodem client, to xmr/rcv data via UART/xmodem protocol",
+	    "-r(read data from console) | -w (write data to console)\n"
+	    "-a <start address for xmt> -l <data/buffer size>\n"},
 	{NULL,        NULL}
 };
 

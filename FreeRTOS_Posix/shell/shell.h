@@ -10,6 +10,8 @@
 #define SYS_QUEUE_FULL      -2
 #define SYS_NOT_AVAILABLE   -3
 
+extern int _inbyte(int msec);
+extern void _outbyte(unsigned char c);
 extern int p2p_log_msg(char *fmt, ...);
 extern int fd_set_blocking(int fd, int blocking);
 

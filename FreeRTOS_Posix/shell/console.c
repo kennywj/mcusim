@@ -38,25 +38,10 @@ extern int parser(unsigned inflag,char *token,int tokmax,char *line,
     char *brkused,int *next, char *quoted);
 extern int fd_set_blocking(int fd, int blocking) ;
 
-/*struct cmd_tbl commands[]=
-{
-	{"help",    cmd_help, "display all commands and help",      ""},
-	{"quit",    cmd_quit, "exit this program",                  ""},
-	{"stat",    cmd_stat, "display uart2wifi status",           ""},
-	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  "-p <device> -b <baud>"},
-	{"on",      cmd_on,   "active uart device",                 ""},
-	{"off",     cmd_off,  "deactive uart device",               ""},
-	{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
-	{"os",      cmd_os,   "display OS infomation",              ""},
-	{"ver",     cmd_ver,  "firmware version",                   ""},
-	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
-	{"duk",     cmd_duk,  "Javascript script interpreter",      "-x\"<javascript script program string>\", -f\"<javacsript program file>\""},
-	{NULL,        NULL}
-};*/
-
 // current command pointer
 struct cmd_tbl *curr_cmd;
-
+// uart input queue
+static xQueueHandle rcvq;
 
 void
 reset_input_mode (void)
@@ -105,6 +90,32 @@ set_input_mode (void)
     return fcntl(fd, F_SETFL, flags) != -1;
 }
 */
+
+//
+// input character from uart
+//
+int _inbyte(int msec)
+{
+    int ch;
+    // wait 1 ticks = 1ms?
+    while (xQueueReceive( rcvq, (char *)&ch, 1 ) != pdTRUE)
+    {
+        if (msec-- <= 0)
+			return -1;
+    }
+    return ch;
+}
+
+//
+// output character to uart
+//
+void _outbyte(unsigned char c)
+{
+    fflush(stdout);
+    write(STDOUT_FILENO,&c,1);
+}
+
+
 //
 // process command string and do command
 //
@@ -217,7 +228,7 @@ void do_console(void *parm)
 {
     int ret,count=0,multi_keys=0;
     char cmdbuf[MAX_CMDLEN+1]={0},*cmd, ch;
-    xQueueHandle rcvq;
+   
 
     // set stdin select, initial STDIN
     set_input_mode();
