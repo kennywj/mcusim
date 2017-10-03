@@ -272,75 +272,7 @@ int xmodemTransmit(unsigned char *src, int srcsz)
 
 
 
-//
-// enable xmodem
-//
-void cmd_xmodem(int argc, char* argv[])
-{
-    int c, ret=0, op=-1;
-    char *tbuf=NULL;
-    static unsigned int addr=0, len=0x10000;
-    
-    while ((c = getopt (argc, argv, "a:l:rw?")) != -1)
-    {
-	    switch (c) {
-    	case 'r':
-    	    op = 0;
-	    break;
-	    case 'w':
-	        op = 1;
-	    break;
-	    case 'a':
-	        addr = atoi(optarg);
-	    break;
-	    case 'l':
-	        len = atoi(optarg);
-	    break;
-	    case '?':
-	    default:
-	        printf("usage: -r(read data from console) | -w (write data to console)>\n");
-	        goto end_xmodem;
-	    }
-    }   // end of while
-    
-    if (op==0)
-    {    
-        tbuf = malloc(len+128); // avoid boudary block need extra one
-        if (!tbuf)
-        {
-            printf("heap not enough, require=%d\n",len);    
-            goto end_xmodem;
-        }    
-        ret = xmodemReceive((unsigned char *)tbuf, len);
-        if (ret < 0) {
-		    printf("Xmodem receive error: status: %d\n", ret);
-	    }
-	    else  
-	    {
-   		    dump_frame(tbuf,ret,"receive data\n");
-		    printf("Xmodem successfully received data len=%d bytes\n", ret);
-	    }
-    }
-    else if (op==1)
-    {
-        if (len)
-        {    
-            ret = xmodemTransmit((unsigned char *)addr, len);
-    	    if (ret < 0)
-	    	    printf("Xmodem transmit error: status: %d\n", ret);
-	        else  
-		        printf("Xmodem successfully transmitted from %p len=%d bytes\n", addr, ret);
-		}
-		else
-		    printf("Xmodem transmit error: no length\n");
-    }   
-    else
-        printf("Xmodem setting: mode=%s, addr=%p, size = %d\n",(op?"read":"write"),addr, len);
-end_xmodem:	
-     if (tbuf)
-        free(tbuf);
-    return;
-}
+
 
 #ifdef TEST_XMODEM_RECEIVE
 int main(void)

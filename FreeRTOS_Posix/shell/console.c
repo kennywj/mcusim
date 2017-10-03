@@ -91,29 +91,7 @@ set_input_mode (void)
 }
 */
 
-//
-// input character from uart
-//
-int _inbyte(int msec)
-{
-    int ch;
-    // wait 1 ticks = 1ms?
-    while (xQueueReceive( rcvq, (char *)&ch, 1 ) != pdTRUE)
-    {
-        if (msec-- <= 0)
-			return -1;
-    }
-    return ch;
-}
 
-//
-// output character to uart
-//
-void _outbyte(unsigned char c)
-{
-    fflush(stdout);
-    write(STDOUT_FILENO,&c,1);
-}
 
 
 //

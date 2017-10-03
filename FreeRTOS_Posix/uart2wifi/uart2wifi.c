@@ -53,6 +53,9 @@ unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_
 
 extern struct netif *LwIP_Init(void);
 
+extern int xmodemTransmit(unsigned char *src, int srcsz);
+extern int xmodemReceive(unsigned char *dest, int destsz);
+
 #if PPP_SUPPORT
 const char PPP_User[256] = "test";
 const char PPP_Pass[256] = "test";
@@ -83,6 +86,30 @@ static unsigned char eth_seg_state=0, txbuf[MAX_PKT_SIZE];
 extern unsigned short CRC16(unsigned char *puchMsg, unsigned short usDataLen);
 #endif
 // end of PPP_SUPPORT
+
+//
+// input character from uart
+//
+int _inbyte(int msec)
+{
+    int ch;
+    // wait 1 ticks = 1ms?
+    while ( pdFALSE == xQueueReceive( xSerialRxQueue, &ch, 1 ) )
+    {
+        if (msec-- <= 0)
+			return -1;
+    }
+    return ch;
+}
+
+//
+// output character to uart
+//
+void _outbyte(unsigned char c)
+{
+    write(iSerialReceive, &c, 1); // include crc
+}
+
 
 
 #if PPP_SUPPORT
@@ -596,6 +623,7 @@ void exit_u2w()
         close(iSerialReceive);
         printf("Close %s!",devname);
         iSerialReceive = 0;
+        vQueueDelete(xSerialRxQueue);
     }
 }
 
@@ -760,3 +788,106 @@ void cmd_xmt(int argc, char* argv[])
         printf("No argument!\nUsage: %s\n",curr_cmd->usage);
 }
 #endif
+
+
+//
+// enable xmodem
+//
+void cmd_xmodem(int argc, char* argv[])
+{
+    int c, ret=0, op=-1;
+    char *tbuf=NULL;
+    static unsigned int addr=0, len=0x10000;
+    
+    while ((c = getopt (argc, argv, "a:l:rw?")) != -1)
+    {
+	    switch (c) {
+    	case 'r':
+    	    op = 0;
+	    break;
+	    case 'w':
+	        op = 1;
+	    break;
+	    case 'a':
+	        addr = atoi(optarg);
+	    break;
+	    case 'l':
+	        len = atoi(optarg);
+	    break;
+	    case '?':
+	    default:
+	        printf("usage: -r(read data from console) | -w (write data to console)>\n");
+	        goto end_xmodem;
+	    }
+    }   // end of while
+    
+    if (op == -1)
+    {
+        printf("Xmodem setting: mode=%s, addr=%p, size = %d\n",(op?"read":"write"),addr, len);
+        goto end_xmodem;
+    }
+    
+    if (u2w_on)
+    {
+        printf("serial port inuse\n");
+        goto end_xmodem;
+    }
+    
+    if (op==0)
+    {
+        tbuf = malloc(len+128); // avoid boudary block need extra one
+        if (!tbuf)
+        {
+            printf("heap not enough, require=%d\n",len);    
+            goto end_xmodem;
+        } 
+    } 
+    // open uart device
+    if ( pdTRUE == lAsyncIOSerialOpen( devname, &iSerialReceive,  baudrate[baudid]) )
+    {
+        xSerialRxQueue = xQueueCreate( MAX_PKT_SIZE*2, sizeof ( unsigned char ) );
+        (void)lAsyncIORegisterCallback( iSerialReceive, vAsyncSerialIODataAvailableISR,
+                                        xSerialRxQueue );
+        printf("Open device %s success\n",devname);
+        
+        u2w_on = 1;
+        
+        if (op==0)
+        {    
+            ret = xmodemReceive((unsigned char *)tbuf, len);
+            if (ret < 0) {
+		        printf("Xmodem receive error: status: %d\n", ret);
+	        }
+	        else  
+	        {
+   		        dump_frame(tbuf,ret,"receive data\n");
+		        printf("Xmodem successfully received data len=%d bytes\n", ret);
+	        }
+        }
+        else if (op==1)
+        {
+            if (u2w_on)
+            {
+                printf("serial port inuse\n");
+                goto end_xmodem;
+            }
+        
+            if (len)
+            {   
+                ret = xmodemTransmit((unsigned char *)addr, len);
+    	        if (ret < 0)
+	    	        printf("Xmodem transmit error: status: %d\n", ret);
+	            else  
+		            printf("Xmodem successfully transmitted from %p len=%d bytes\n", addr, ret);
+		    }
+		    else
+		        printf("Xmodem transmit error: no length\n");
+        }  
+        // close device
+        exit_u2w(); 
+    }   
+end_xmodem:	
+     if (tbuf)
+        free(tbuf);
+    return;
+}
