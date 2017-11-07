@@ -27,6 +27,9 @@ RM := rm -rf
 -include lwip/subdir_if_ppp.mk
 -include lwip/subdir_if_polarssl.mk
 -include port/subdir_port.mk
+-include fatfs/subdir_fat.mk
+-include fatfs/subdir_fat_option.mk
+-include fatfs/subdir_fat_port.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

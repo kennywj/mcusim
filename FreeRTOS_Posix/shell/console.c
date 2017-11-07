@@ -34,6 +34,8 @@ int history_id=0;
 
 struct termios saved_attributes;
 int do_exit =0;
+xTaskHandle hShellTask;
+
 extern int parser(unsigned inflag,char *token,int tokmax,char *line,
     char *brkused,int *next, char *quoted);
 extern int fd_set_blocking(int fd, int blocking) ;
@@ -339,3 +341,16 @@ end_console:
     vTaskEndScheduler();
     //vTaskDelete(NULL);
 }   //do_console
+
+
+//
+//  function: shell_init
+//      initial a console shell
+//  parameters
+//      none
+//
+void shell_init()
+{
+    /* Create a Task which waits to receive from STDIN and sent to consle thread to handle it as the command sting. */
+	xTaskCreate( do_console, "Shell", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &hShellTask );
+}

@@ -34,6 +34,9 @@ struct cmd_tbl commands[]=
 	{"xmodem",  cmd_xmodem,  "xmodem client, to xmr/rcv data via UART/xmodem protocol",
 	    "-r(read data from console) | -w (write data to console)\n"
 	    "-a <start address for xmt> -l <data/buffer size>\n"},
+	{"touch",   cmd_touch,  "create a new file",        "<filename> [<data>] (option)"},
+	{"dir",     cmd_dir,    "list files",        ""},
+	{"del",     cmd_del,    "delete files/folders",        ""},
 	{NULL,        NULL}
 };
 

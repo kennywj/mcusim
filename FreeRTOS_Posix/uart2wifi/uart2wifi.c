@@ -225,7 +225,7 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
 
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 {
-    dump_frame(data,len,"PPP tx len %d\n");
+    dump_frame(data,len,"PPP tx len %d\n",len);
 	ppp_tx_pcnt += 1;
 	ppp_tx_bcnt += len;
     return write(iSerialReceive, data, len);

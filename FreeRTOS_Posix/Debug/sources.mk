@@ -24,6 +24,7 @@ Common_Demo/Full \
 AsyncIO \
 shell   \
 uart2wifi   \
-lwip
+lwip    \
+fatfs
 
 
