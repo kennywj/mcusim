@@ -18,10 +18,10 @@ struct cmd_tbl commands[]=
 {
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
-	{"stat",    cmd_stat, "display uart2wifi status",           ""},
+	{"info",    cmd_info, "display uart2wifi status",           ""},
 	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  
 	    "-d <device> -b <baud> -m<type>(0:PPP client, 1:server),"
-	    "-u <username> -p <password> -c (clear)"},
+	    "\t    -u <username> -p <password> -c (clear)"},
 	{"on",      cmd_on,   "active uart device PPP active",                 ""},
 	{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
 	//{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
@@ -33,10 +33,20 @@ struct cmd_tbl commands[]=
 	{"net",     cmd_net,  "display network information",        ""},
 	{"xmodem",  cmd_xmodem,  "xmodem client, to xmr/rcv data via UART/xmodem protocol",
 	    "-r(read data from console) | -w (write data to console)\n"
-	    "-a <start address for xmt> -l <data/buffer size>\n"},
+	    "\t    -a <start address for xmt> -l <data/buffer size>\n"},
 	{"touch",   cmd_touch,  "create a new file",        "<filename> [<data>] (option)"},
-	{"dir",     cmd_dir,    "list files",        ""},
-	{"del",     cmd_del,    "delete files/folders",        ""},
+	{"dir",     cmd_dir,    "list files/folders",        ""},
+	{"ls",      cmd_dir,    "list files/folders",        ""},
+	{"del",     cmd_del,    "delete files/folders",        "[-r (recursive)] <file/folder name>"},
+	{"rm",      cmd_del,    "delete files/folders",        "[-r (recursive)] <file/folder name>"},
+	{"mkdir",   cmd_mkdir,  "create a new folder",        "<new folder name>"},
+	{"cd",      cmd_cd,     "change currently work folder",        "<folder>"},
+	{"pwd",     cmd_pwd,    "display currently work folder",        ""},
+	{"rename",  cmd_rename, "change file/floder's name",        "<old name> <new name>"},
+	{"stat",    cmd_stat,   "show file/floder's status",        "<file/folder name>"},
+	{"cp",      cmd_cp,     "copy file",         "<original file name> <new file name>"},
+	{"cat",     cmd_cat,    "concate 2 files, only one argument, show the file content",
+	    "[-o overwrite] <dest file> [< surce file>]"},
 	{NULL,        NULL}
 };
 
@@ -46,7 +56,7 @@ void cmd_help(int argc, char* argv[])
     
     while(p && p->name!=NULL)
     {
-        printf("%-10s -- %10s,\n\t%10s\n",p->name, p->desc, p->usage); 
+        printf("%-10s -- %10s,\n\t    %s\n",p->name, p->desc, p->usage); 
         p++;   
     }
 }

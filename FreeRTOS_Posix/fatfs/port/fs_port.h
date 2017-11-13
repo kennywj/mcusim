@@ -3,17 +3,30 @@
 //
 #include "ff.h"
 
-#define MAX_ARGS    8
+#define MAX_ARGS        8
 // define API's ID
-#define FS_OPEN     0
-#define FS_CLOSE    1
-#define FS_READ     2
-#define FS_WRITE    3
-#define FS_OPENDIR  4
-#define FS_CLOSEDIR 5
-#define FS_READDIR  6
-#define FS_GETFREE  7
-#define FS_UNLINK   8
+#define FS_OPEN         0x01
+#define FS_CLOSE        0x02
+#define FS_READ         0x03
+#define FS_WRITE        0x04
+#define FS_UNLINK       0x05
+#define FS_STAT         0x06
+#define FS_LSEEK        0x07
+#define FS_TURNCATE     0x08
+#define FS_SYNC         0x09
+
+
+#define FS_OPENDIR      0x21
+#define FS_CLOSEDIR     0x22
+#define FS_READDIR      0x23
+#define FS_FINDFIRST    0x24
+#define FS_FINDNEXT     0x25
+#define FS_MKDIR        0x26
+#define FS_CHANGEDIR    0x27
+#define FS_GETCWD       0x28
+
+#define FS_RENAME       0x40
+#define FS_GETFREE      0x41
 
 typedef struct _fs_msg_
 {

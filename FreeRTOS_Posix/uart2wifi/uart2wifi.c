@@ -628,14 +628,14 @@ void exit_u2w()
 }
 
 //
-//  function: cmd_stat
+//  function: cmd_info
 //      diaplay status of tunnel server daemon
 //  parameters
 //      argc:   1
 //      argv:   none
 //
 
-void cmd_stat(int argc, char* argv[])
+void cmd_info(int argc, char* argv[])
 {
     printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (u2w_on?"ON":"OFF"));
 #if PPP_SUPPORT    
