@@ -4,7 +4,7 @@
 # 'make clean' remove object files
 #
 ODIR = ../build
-LIB = $(ODIR)/lwip.a
+LIB = $(ODIR)/liblwip.a
 INCS =  -I./ -I./arch -I./freertos -I../lwip/src/include -I../include	-I../FreeRTOS_Posix \
 	-I../FreeRTOS_Posix/FreeRTOS_Kernel/include
 

@@ -8,8 +8,10 @@ PROG = ./u2w
 LIB_PATH := -L./build
 INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel/include	\
 	-I./port -I./FreeRTOS_Posix/Common_Demo/include/
-LIBS := $(LIB_PATH)/sys.a $(LIB_PATH)/shell.a $(LIB_PATH)/freertos.a $(LIB_PATH)/lwip.a \
-	$(LIB_PATH)/fatfs.a
+#	
+# p.s the link order of library has depenendce, not change
+#
+LIBS = -lshell -lsys -llwip -lfreertos -lfatfs -lpthread -lm
 
 CC = gcc
 LD = ld
@@ -29,15 +31,15 @@ SUBDIRS = sys shell FreeRTOS_Posix fatfs port
 
 .PHONY: subdirs $(SUBDIRS) clean all
 
-all: subdirs $(PROG)
+all: $(PROG)
 
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@
-	
-$(PROG): $(SRCS)
-	$(CC) $(CFLAGS) $(INCS) -Wl,-Map=$(PROG).map $(LIBS) $^ -o $@ -lm -lpthread
+
+$(PROG): $(SRCS) subdirs 
+	$(CC) $(CFLAGS) $(INCS) $(LIB_PATH) -Wl,-Map=$(PROG).map $< -o $@ $(LIBS)
 	@echo "    Generate Program $(notdir $(PROG)) from $^"	
     
 clean:

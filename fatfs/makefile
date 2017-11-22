@@ -4,13 +4,13 @@
 # 'make clean' remove object files
 #
 ODIR = ../build
-LIB = $(ODIR)/fatfs.a
+LIB = $(ODIR)/libfatfs.a
 INCS =  -I./src -I./port -I./src/option -I../include -I../FreeRTOS_Posix    \
     -I../FreeRTOS_Posix/FreeRTOS_Kernel/include -I../port -I../shell
 VPATH = ./src:./src/option:./port
 	
 SRCS = diskio.c ff.c cc950.c syscall.c unicode.c    \
-    cmdfs.c fattime.c fs_port.c ramdisk.c
+    fattime.c fs_port.c ramdisk.c
 	
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 
@@ -26,7 +26,7 @@ $(ODIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@  
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) $(LIB)
 
 depend: $(SRCS)
 	makedepend $(INCS) $<

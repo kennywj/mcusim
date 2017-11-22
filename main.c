@@ -141,7 +141,7 @@ int main( void )
 {
 	/* Initialise hardware and utilities. */
 	vParTestInitialise();
-	vPrintInitialise();
+//	vPrintInitialise();
     /* Create the co-routines that communicate with the tick hook. */
 	vStartHookCoRoutines();
 	// initial File system

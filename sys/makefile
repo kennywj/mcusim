@@ -4,11 +4,11 @@
 # 'make clean' remove object files
 #
 ODIR = ../build
-LIB = $(ODIR)/sys.a
+LIB = $(ODIR)/libsys.a
 INCS = -I./duktape -I../include -I../FreeRTOS_Posix  -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
 	-I../lwip/src/include -I../shell -I../port -I../port/freertos
 VPATH = ./
-SRCS = crc16.c ping.c sys.c
+SRCS = crc16.c ping.c sys.c xmodem.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 .PHONY: clean depend all
@@ -23,7 +23,7 @@ $(ODIR)/%.o: %.c
 	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@  
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) $(LIB) *.bak
 
 depend: $(SRCS)
 	makedepend $(INCS) $<

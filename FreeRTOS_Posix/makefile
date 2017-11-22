@@ -4,7 +4,7 @@
 # 'make clean' remove object files
 #
 ODIR = ../build
-LIB = $(ODIR)/freertos.a
+LIB = $(ODIR)/libfreertos.a
 INCS =  -I./ -I./AsyncIO  -I../FreeRTOS_Posix -I./FreeRTOS_Kernel/include -I../port  \
 	-I./Common_Demo/include
 VPATH = .:./AsyncIO:./FileIO:./FreeRTOS_Kernel:./FreeRTOS_Kernel/portable/GCC/Posix:	\
