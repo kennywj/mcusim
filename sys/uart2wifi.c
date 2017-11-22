@@ -93,10 +93,11 @@ extern unsigned short CRC16(unsigned char *puchMsg, unsigned short usDataLen);
 int _inbyte(int msec)
 {
     int ch;
-    // wait 1 ticks = 1ms?
-    while ( pdFALSE == xQueueReceive( xSerialRxQueue, &ch, 1 ) )
+    // wait 10 ticks = 10ms?
+    while ( pdFALSE == xQueueReceive( xSerialRxQueue, &ch, 10 ) )
     {
-        if (msec-- <= 0)
+        msec-=10;
+        if (msec <= 0)
 			return -1;
     }
     return ch;
