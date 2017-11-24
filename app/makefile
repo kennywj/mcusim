@@ -4,23 +4,24 @@
 # 'make clean' remove object files
 #
 ODIR = ../build
-LIB = $(ODIR)/libsys.a
-INCS = -I./duktape -I../include -I../FreeRTOS_Posix  -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../lwip/src/include -I../shell -I../port -I../port/freertos
-VPATH = ./
-SRCS = crc16.c sys.c xmodem.c
+LIB = $(ODIR)/libapp.a
+INCS = -I./duktape -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
+	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port -I../port -I../port/freertos	\
+	-I../lwip/src/include -I../shell -I../include
+VPATH = .
+SRCS =tcpecho.c ping.c  cmdnet.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
-.PHONY: clean depend all
+.PHONY: clean depend
 
 all: $(LIB)
 
 $(LIB): $(OBJS)
 	@$(AR) cr $@ $^
 	@echo "    Archive    $(notdir $@)"
-        
+   
 $(ODIR)/%.o: %.c
-	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@  
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@  
 
 clean:
 	rm -f $(OBJS) $(LIB) *.bak

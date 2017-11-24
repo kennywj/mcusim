@@ -89,19 +89,21 @@ LwIP_Init(void)
 //
 // command net, display network related information
 //
-void cmd_net(int argc, char* argv[])
+int netif_info(char *buf, int size)
 {
     struct netif *netif;
-    char ipaddr[16],netmask[16],gw[16];
-    
+    char ipaddr[16],netmask[16],gw[16], *cp=buf, *end = &buf[size];
+	
+	buf[0]='\0';
     for(netif = netif_list; netif != NULL; netif = netif->next) {
         
         strncpy(ipaddr,ipaddr_ntoa(&netif->ip_addr),16);
         strncpy(netmask,ipaddr_ntoa(&netif->netmask),16);
         strncpy(gw,ipaddr_ntoa(&netif->gw),16);
-        printf("%c%c: ip %s, mask %s, gw %s\n",netif->name[0], netif->name[1],
+        cp += snprintf(cp, end-cp, "%c%c: ip %s, mask %s, gw %s\n",netif->name[0], netif->name[1],
             ipaddr, netmask, gw);
         //printf("%c%c: ip %s, mask %s, gw %s\n",netif->name[0], netif->name[1],
         //ipaddr_ntoa(&netif->ip_addr), ipaddr_ntoa(&netif->netmask), ipaddr_ntoa(&netif->gw));
     }
+    return 0;
 }
