@@ -16,6 +16,7 @@
 #include "task.h"
 
 #ifndef PPP_SUPPORT
+
 #define NET_IF_NUM 1
 #define IFNAME0 'e'
 #define IFNAME1 '0'
@@ -27,8 +28,7 @@ static ip_addr_t ipaddr, netmask, gw;
 //  function: init_netifs
 //      network interface initialize
 //
-static void
-init_netifs(void)
+void init_netifs(int idx)
 {
     int idx=0;
     
@@ -57,9 +57,9 @@ tcpip_init_done(void *arg)
   sys_sem_t *sem;
   sem = (sys_sem_t *)arg;
   printf("TCP/IP initialized.\n");
-#ifndef PPP_SUPPORT
-    init_netifs();
-#endif
+//#ifndef PPP_SUPPORT
+//    init_netifs();
+//#endif
   sys_sem_signal(sem);
 }
 
@@ -68,8 +68,8 @@ tcpip_init_done(void *arg)
 //  function: LwIP_Init
 //      
 //
-struct netif * 
-LwIP_Init(void)
+//struct netif * 
+void LwIP_Init(void)
 {
 	sys_sem_t sem;
 	
@@ -79,11 +79,11 @@ LwIP_Init(void)
     }
     tcpip_init(tcpip_init_done, &sem);
     sys_sem_wait(&sem);
-#ifdef PPP_SUPPORT    
-    return NULL;
-#else    
-    return &xnetif[0];
-#endif
+//#ifdef PPP_SUPPORT    
+//    return NULL;
+//#else    
+//    return &xnetif[0];
+//#endif
 }
 
 //

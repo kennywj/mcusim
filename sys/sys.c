@@ -51,7 +51,7 @@ const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200};
 int baudid=1;
 unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
 
-extern struct netif *LwIP_Init(void);
+//extern struct netif *LwIP_Init(void);
 
 extern int xmodemTransmit(unsigned char *src, int srcsz);
 extern int xmodemReceive(unsigned char *dest, int destsz);
@@ -248,7 +248,7 @@ void pppos_client_thread( void *pvParameters )
     int len;
     
     // do Lwip init (include PPP)
-    LwIP_Init();
+    //LwIP_Init(); move to main.c
 
     printf("PPP client\n");
     
@@ -335,7 +335,7 @@ void pppos_server_thread( void *pvParameters )
     int len;
     
     // do Lwip init (include PPP)
-    LwIP_Init();
+    //LwIP_Init();	// move to main.c
     
     // init PPP over serial
     ppp = pppos_create(&ppp_netif,
@@ -459,7 +459,8 @@ void uart_rx_process( void *pvParameters )
     if ( NULL != hSerialRxQueue )
     {
         // do Lwip init
-        uartif = LwIP_Init();
+        //uartif = LwIP_Init();
+        uartif = init_netifs();
         if (!uartif)
             goto end_uart_rx_process;
 

@@ -131,21 +131,39 @@
 
 /* Priority definitions for the tasks in the demo application. */
 #define SHELL_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
-const char *software_version="uart2wifi v0.0.1";
+const char *software_version="uart2wifi v0.2";
 extern void do_console( void * pvParameters );
 extern void fs_init(void);
 extern void shell_init(void);
+extern void LwIP_Init(void);
 /*-----------------------------------------------------------*/
 
+//
+//  function: do_fs
+//      intiial RAM¡@file system
+//  parameters
+//      none
+//
+void do_init(void *parm)
+{
+	printf("start init...\n");
+	// initial File system
+	fs_init();
+	// initial network protocol stack
+	LwIP_Init();
+	printf("end init\n");
+    vTaskDelete(NULL);
+}
 int main( void )
 {
+	xTaskHandle hSysTask;
 	/* Initialise hardware and utilities. */
 	vParTestInitialise();
 //	vPrintInitialise();
     /* Create the co-routines that communicate with the tick hook. */
 	vStartHookCoRoutines();
-	// initial File system
-	fs_init();
+	// initial fs and network
+	xTaskCreate( do_init, "init", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &hSysTask );
 	// initial console
 	shell_init();
 	/* Set the scheduler running.  This function will not return unless a task calls vTaskEndScheduler(). */
