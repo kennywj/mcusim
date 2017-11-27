@@ -39,7 +39,6 @@
 #include <unistd.h>
 #include <string.h>
 #include "shell.h"
-#include "cmd.h"
 #include "crc16.h"
 
 #define SOH  0x01
@@ -53,7 +52,8 @@
 #define DLY_1S 1000
 #define MAXRETRANS 25
 
-
+extern int _inbyte(int msec);
+extern void _outbyte(unsigned char c);
 
 static int check(int crc, const unsigned char *buf, int sz)
 {

@@ -159,6 +159,7 @@ void tcpecho_client_handler(void *arg)
 		}
 		printf("%s:Client recv %d:\"%s\"\n",__FUNCTION__,recv_data,data_buffer);
 		echo_time--;
+		vTaskDelay(1000);	// delay 1 second
 	}
 end_tcpecho_client:
 	if(socket_fd>=0)

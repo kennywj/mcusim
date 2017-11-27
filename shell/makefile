@@ -8,7 +8,7 @@ LIB = $(ODIR)/libshell.a
 INCS = -I../include -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
 	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port 
 VPATH = .
-SRCS = cmd.c console.c crc16.c parser.c util.c cmdfs.c
+SRCS = cmd.c console.c parser.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 .PHONY: clean depend

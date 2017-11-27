@@ -8,7 +8,7 @@ LIB = $(ODIR)/libsys.a
 INCS = -I./duktape -I../include -I../FreeRTOS_Posix  -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
 	-I../lwip/src/include -I../shell -I../port -I../port/freertos
 VPATH = ./
-SRCS = crc16.c sys.c xmodem.c
+SRCS = crc16.c sys.c util.c xmodem.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 .PHONY: clean depend all

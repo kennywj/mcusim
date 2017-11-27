@@ -43,12 +43,12 @@
 
 static int u2w_on=0;
 static xQueueHandle xSerialRxQueue;
-static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB1";
+static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB0";
 static int iSerialReceive = 0;
 static xTaskHandle hSerialTask;
 const char *baudstr[MAX_BAUD_NUM]= {"9600","38400","57600","115200"};
 const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200};
-int baudid=1;
+int baudid=3;	// default 115200
 unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
 
 //extern struct netif *LwIP_Init(void);
@@ -226,7 +226,7 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
 
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 {
-    dump_frame(data,len,"PPP tx len %d\n",len);
+	//dump_frame(data,len,"PPP tx len %d\n",len);
 	ppp_tx_pcnt += 1;
 	ppp_tx_bcnt += len;
     return write(iSerialReceive, data, len);
@@ -296,7 +296,7 @@ void pppos_client_thread( void *pvParameters )
 			if (len>1)
 			{
 				data[len++]=ch;	// end of frame
-				dump_frame(data,len,"PPP rx len %d\n",len);
+				//dump_frame(data,len,"PPP rx len %d\n",len);
         		ppp_rx_pcnt += 1;
                 pppos_input_tcpip(ppp, (u8_t *)data, len);
 			}
@@ -313,6 +313,7 @@ end_ppp_client:
         ppp_free(ppp);
     }
     printf( "%s Task exiting.\n",__FUNCTION__ );
+    exit_ppp=0;
     hSerialTask = NULL;
     vTaskDelete( NULL );
 }
@@ -415,7 +416,7 @@ void pppos_server_thread( void *pvParameters )
 			if (len>1)
 			{
 				data[len++]=ch;	// end of frame
-				dump_frame(data,len,"PPP rx len %d\n",len);
+				//dump_frame(data,len,"PPP rx len %d\n",len);
 				ppp_rx_pcnt += 1;
                 pppos_input_tcpip(ppp, (u8_t *)data, len);
 			}
@@ -433,6 +434,7 @@ end_ppp_server:
     }
 
     printf( "%s Task exiting.\n",__FUNCTION__ );
+    exit_ppp=0;
     hSerialTask = NULL;
     vTaskDelete( NULL );    
 }
@@ -672,6 +674,12 @@ void cmd_on(int argc, char* argv[])
         printf("strat uart Tx semaphore fail\n");
         return;
     }
+#else
+	if (hSerialTask!=NULL)
+	{
+		printf("PPP working\n");
+		return;
+	}
 #endif
     // open uart device
     if ( pdTRUE == lAsyncIOSerialOpen( devname, &iSerialReceive,  baudrate[baudid]) )
@@ -791,12 +799,12 @@ void cmd_xmt(int argc, char* argv[])
 }
 #endif
 
-
 //
-// enable xmodem
+// enable xmodemint u2w_on
 //
 void cmd_xmodem(int argc, char* argv[])
 {
+	extern int u2w_on;
     int c, ret=0, op=-1;
     char *tbuf=NULL;
     static unsigned int addr=0, len=0x10000;
@@ -893,3 +901,4 @@ end_xmodem:
         free(tbuf);
     return;
 }
+
