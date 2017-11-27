@@ -5,8 +5,8 @@
 #
 ODIR = ../build
 LIB = $(ODIR)/libshell.a
-INCS = -I./duktape -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port
+INCS = -I../include -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
+	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port -I./duktape 
 VPATH = .:./duktape
 SRCS = cmd.c console.c crc16.c parser.c util.c duktape.c cmdfs.c
 

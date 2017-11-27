@@ -38,6 +38,6 @@ extern void cmd_rename(int argc, char* argv[]);
 extern void cmd_stat(int argc, char* argv[]);
 extern void cmd_cp(int argc, char* argv[]);
 extern void cmd_cat(int argc, char* argv[]);
-//extern void dump_frame(char *msg, char *frame, int len);
+extern void cmd_echo(int argc, char* argv[]);
 extern void dump_frame(char *frame, int len, const char * fmt, ...);
 #endif

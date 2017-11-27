@@ -136,22 +136,26 @@ extern void do_console( void * pvParameters );
 extern void fs_init(void);
 extern void shell_init(void);
 extern void LwIP_Init(void);
+extern void app_init(void);
 /*-----------------------------------------------------------*/
 
 //
-//  function: do_fs
-//      intiial RAM¡@file system
+//  function: do_init
+//      intiial system software modules
 //  parameters
 //      none
 //
 void do_init(void *parm)
 {
-	printf("start init...\n");
+	printf("\n### start init... ###\n");
 	// initial File system
 	fs_init();
 	// initial network protocol stack
 	LwIP_Init();
-	printf("end init\n");
+	// application initial
+	app_init();
+	
+	printf("### end init ###\n");
     vTaskDelete(NULL);
 }
 int main( void )

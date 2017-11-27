@@ -31,6 +31,8 @@ struct cmd_tbl commands[]=
 	{"duk",     cmd_duk,  "Javascript script interpreter",      
 	    "-x\"<javascript script program string>\", -f\"<javacsript program file>\""},
 	{"net",     cmd_net,  "display network information",        ""},
+	{"echo",     cmd_echo,  "tcp echo client/server",        
+		"-g (start) [-t<time>] <message> -p <port> -s<server url> -m<message>"},
 	{"xmodem",  cmd_xmodem,  "xmodem client, to xmr/rcv data via UART/xmodem protocol",
 	    "-r(read data from console) | -w (write data to console)\n"
 	    "\t    -a <start address for xmt> -l <data/buffer size>\n"},
