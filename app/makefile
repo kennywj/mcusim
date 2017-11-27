@@ -8,8 +8,8 @@ LIB = $(ODIR)/libapp.a
 INCS = -I./duktape -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
 	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port -I../port -I../port/freertos	\
 	-I../lwip/src/include -I../shell -I../include
-VPATH = .
-SRCS = app.c tcpecho.c ping.c  cmdnet.c
+VPATH = .:./duktape
+SRCS = app.c tcpecho.c ping.c  cmdnet.c cmdduktape.c duktape.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 .PHONY: clean depend
