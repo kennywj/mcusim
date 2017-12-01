@@ -17,7 +17,7 @@ CC = gcc
 LD = ld
 AR = ar
 
-CFLAGS := -Wall -g
+CFLAGS := -Wall -g -Wno-pointer-sign
 CFLAGS += -DDEBUG
 
 LDFLAGS :=
