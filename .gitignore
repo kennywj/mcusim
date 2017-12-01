@@ -1,5 +1,5 @@
 *.o
 *.d
 u2w
-u2w.map
+*.map
 *.a
