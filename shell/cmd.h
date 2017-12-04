@@ -4,7 +4,7 @@
 #ifndef __CMD_H__
 #define __CMD_H__
 
-#define MAX_ARGS 12
+//#define MAX_ARGS 12
 
 struct cmd_tbl
 {
@@ -39,6 +39,7 @@ extern void cmd_stat(int argc, char* argv[]);
 extern void cmd_cp(int argc, char* argv[]);
 extern void cmd_cat(int argc, char* argv[]);
 extern void cmd_echo(int argc, char* argv[]);
+extern void cmd_http(int argc, char* argv[]);
 
 extern void dump_frame(char *frame, int len, const char * fmt, ...);
 #endif

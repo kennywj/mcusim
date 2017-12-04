@@ -48,6 +48,7 @@ struct cmd_tbl commands[]=
 	{"cp",      cmd_cp,     "copy file",         "<original file name> <new file name>"},
 	{"cat",     cmd_cat,    "concate 2 files, only one argument, show the file content",
 	    "[-o overwrite] <dest file> [< surce file>]"},
+	{"http",    cmd_http,   "http_parser test command",         ""},
 	{NULL,        NULL}
 };
 

@@ -2,8 +2,7 @@
 // fs_port.h
 //
 #include "ff.h"
-
-#define MAX_ARGS        8
+#define MAX_FS_ARGS        8
 // define API's ID
 #define FS_OPEN         0x01
 #define FS_CLOSE        0x02
@@ -34,7 +33,7 @@ typedef struct _fs_msg_
     xSemaphoreHandle sem;   // wait semaphore
     unsigned int id;        // API index
     int res;
-    void *args[MAX_ARGS]; 
+    void *args[MAX_FS_ARGS]; 
 }FS_MSG;
 
 FRESULT fs_open (FIL* fp, const char* path, BYTE mode);			/* Open or create a file */
