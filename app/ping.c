@@ -10,12 +10,14 @@
 #include "lwip/raw.h"
 #include "lwip/icmp.h"
 #include "lwip/netif.h"
+#include "lwip/ip_addr.h"
 #include "lwip/sys.h"
 #include "lwip/timeouts.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/sockets.h"
 #include "lwip/inet.h"
 #include "lwip/debug.h"
+#include "lwip/netdb.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -54,7 +56,7 @@ static xTaskHandle hPingTask;
 static int repeat_time=4;
 static u16_t ping_seq_num;
 static u32_t ping_time;
-static struct raw_pcb *ping_pcb;
+//static struct raw_pcb *ping_pcb;
 
 /** Prepare a echo ICMP request */
 static void
@@ -164,11 +166,22 @@ void ping_thread( void *arg )
     int s,count=0;
     int timeout = PING_RCV_TIMEO;
     ip_addr_t ping_target;
+    struct hostent *phe;
     char *addr = (char *)arg;
 
     // convert string to ip_addr_t
-    ipaddr_aton(addr, &ping_target);
-
+    if ((phe = gethostbyname(addr))!=NULL)
+    {
+		ip_addr_set_ip4_u32(&ping_target, *(u32_t *)phe->h_addr);
+		ip_addr_debug_print_val(PING_DEBUG, ping_target);
+	}
+    else
+    {
+		printf("cannot get host %s address\n",addr);
+		goto end_ping_thread;
+	}
+	//	ipaddr_aton(addr, &ping_target);
+	
     if ((s = lwip_socket(AF_INET, SOCK_RAW, IP_PROTO_ICMP)) < 0)
     {
         LWIP_DEBUGF( PING_DEBUG,("open socket error %"U32_F"\n",s));

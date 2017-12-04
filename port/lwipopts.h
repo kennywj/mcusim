@@ -303,7 +303,7 @@
  * LWIP_DNS==1: Turn on DNS module. UDP must be available for DNS
  * transport.
  */
-#define LWIP_DNS                        0
+#define LWIP_DNS                        1
 
 /*
    ---------------------------------
