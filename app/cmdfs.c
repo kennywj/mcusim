@@ -16,7 +16,7 @@
 #include "fs_port.h"
 #include "cmd.h"
 
-static pwd[512]={0};
+static char pwd[512]={0};
 //
 //  function: cmd_mount
 //      mount file system, for RAM disk do init
@@ -113,7 +113,7 @@ void cmd_dir(int argc, char* argv[])
     if (res)
     {
         printf("Get free space fail\n");
-        return res;
+        return;
     }
     /* Get total sectors and free sectors */
     tot_sect = (fs->n_fatent - 2) * fs->csize;
@@ -121,7 +121,7 @@ void cmd_dir(int argc, char* argv[])
     /* Print the free space (assuming 512 bytes/sector) */
     printf("%10lu KiB total drive space. %10lu KiB available.\n",
            tot_sect / 2, fre_sect / 2);
-    return res;
+    return;
 }
 
 
