@@ -250,13 +250,11 @@ void pppos_client_thread( void *pvParameters )
     // do Lwip init (include PPP)
     //LwIP_Init(); move to main.c
 
-    printf("PPP client\n");
+    printf("PPP client start\n");
     
     // init PPP over serial
     ppp = pppos_create(&ppp_netif,
         ppp_output_callback, ppp_status_cb, NULL);
-
-    printf("After pppapi_pppos_create\n");
 
     if (ppp == NULL) {
         printf("Error init pppos\n");
@@ -266,13 +264,9 @@ void pppos_client_thread( void *pvParameters )
     ppp_set_default(ppp);
 
     /* Ask the peer for up to 2 DNS server addresses. */
-    //ppp_set_usepeerdns(ppp, 1);
-
-    printf("After ppp_set_default\n");
+    ppp_set_usepeerdns(ppp, 1);
 
     ppp_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
-
-    printf("After ppp_set_auth\n");
 
     ppp_connect(ppp, 0);
 
