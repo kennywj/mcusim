@@ -53,6 +53,14 @@ long lReturn = pdFALSE;
 }
  /*---------------------------------------------------------------------------*/
 
+void lAsyncIOSerialClose( int iSocket )
+{
+	close( iSocket );
+	vAsyncIOUnregisterCallback( iSocket );
+}
+
+/*---------------------------------------------------------------------------*/
+
 /* Define a callback function which is called when data is available. */
 void vAsyncSerialIODataAvailableISR( int iFileDescriptor, void *pContext )
 {

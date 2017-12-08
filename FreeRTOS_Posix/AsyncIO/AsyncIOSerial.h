@@ -17,6 +17,8 @@
  */
 long lAsyncIOSerialOpen( const char *pcDevice, int *piDeviceDescriptor , int baud);
 
+void lAsyncIOSerialClose( int iSocket );
+
 /**
  * The 'ISR' callback function that is triggered when there is data waiting.
  * This function is intended to be registered using lAsyncIORegisterCallback().

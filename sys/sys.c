@@ -51,7 +51,6 @@ const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200};
 int baudid=3;	// default 115200
 unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
 
-//extern struct netif *LwIP_Init(void);
 
 extern int xmodemTransmit(unsigned char *src, int srcsz);
 extern int xmodemReceive(unsigned char *dest, int destsz);
@@ -60,12 +59,9 @@ extern int xmodemReceive(unsigned char *dest, int destsz);
 const char PPP_User[256] = "test";
 const char PPP_Pass[256] = "test";
 
-/* The PPP control block */
-ppp_pcb *ppp;
-/* The PPP IP interface */
-struct netif ppp_netif;
-static int exit_ppp = 0, ppp_type =0, frame_state=0;   // 0:client 1:server
+static int exit_ppp = 0, ppp_type =0;   // 0:client 1:server
 unsigned int ppp_tx_pcnt, ppp_tx_bcnt, ppp_rx_pcnt, ppp_rx_bcnt;
+static xSemaphoreHandle ppp_sem =	NULL;
 #else
 // not PPP_SUPPORT
 struct _ethseg_msg_
@@ -211,6 +207,8 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
     /* ppp_close() was previously called, don't reconnect */
     if (err_code == PPPERR_USER) {
         /* ppp_free(); -- can be called here */
+        ppp_free(pcb);
+        exit_ppp = 2;
         return;
     }
 
@@ -242,14 +240,15 @@ static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 //
 void pppos_client_thread( void *pvParameters )
 {
+	/* The PPP control block */
+	ppp_pcb *ppp;
+	/* The PPP IP interface */
+	struct netif ppp_netif;
     xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
     char data[MAX_PKT_SIZE];
     u8_t nocarrier = 0, ch;
     int len;
     
-    // do Lwip init (include PPP)
-    //LwIP_Init(); move to main.c
-
     printf("PPP client start\n");
     
     // init PPP over serial
@@ -274,7 +273,7 @@ void pppos_client_thread( void *pvParameters )
     
     exit_ppp = 0;
     len = 0;
-    frame_state = 0;
+
     while (1) {
         // repeat read data and use timeout to exit
         if ( pdFALSE == xQueueReceive( hSerialRxQueue, &ch, 20 ) )  // wait more the 10ms, expired
@@ -302,13 +301,16 @@ void pppos_client_thread( void *pvParameters )
      }  // end while
 end_ppp_client:
     if (ppp)
+        ppp_close(ppp, nocarrier);  
+         
+    while(exit_ppp != 2)
     {
-        ppp_close(ppp, nocarrier);   
-        ppp_free(ppp);
+		vTaskDelay(1000);	// delay 1 second
     }
-    printf( "%s Task exiting.\n",__FUNCTION__ );
+    printf( "Close %s! %s Task exiting.\n",devname,__FUNCTION__ );
     exit_ppp=0;
     hSerialTask = NULL;
+    xSemaphoreGive(ppp_sem);
     vTaskDelete( NULL );
 }
 
@@ -324,6 +326,10 @@ end_ppp_client:
 //
 void pppos_server_thread( void *pvParameters )
 {
+	/* The PPP control block */
+	ppp_pcb *ppp;
+	/* The PPP IP interface */
+	struct netif ppp_netif;
     xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
     char data[MAX_PKT_SIZE];
     u8_t nocarrier = 0, ch;
@@ -394,7 +400,7 @@ void pppos_server_thread( void *pvParameters )
     printf("PPP server ready, waiting connect from client\n");
     exit_ppp = 0;
     len = 0;
-    frame_state = 0;
+
     while (1) {
         // repeat read data and use timeout to exit
         if ( pdFALSE == xQueueReceive( hSerialRxQueue, &ch, 20 ) )  // wait more the 10ms, expired
@@ -426,10 +432,10 @@ end_ppp_server:
         ppp_close(ppp, nocarrier);   
         ppp_free(ppp);
     }
-
-    printf( "%s Task exiting.\n",__FUNCTION__ );
+    printf( "Close %s! %s Task exiting.\n",devname,__FUNCTION__ );
     exit_ppp=0;
     hSerialTask = NULL;
+    xSemaphoreGive(ppp_sem);
     vTaskDelete( NULL );    
 }
 
@@ -606,7 +612,7 @@ void uart_tx_process(char type, int len, char *data)
 //  function: exit_u2w
 //      do exit of uart2wifi module
 //  parameters:
-//      none
+//      int pointer on_off
 //  return:
 //      none
 //
@@ -614,12 +620,17 @@ void exit_u2w()
 {
     if (u2w_on)
     {
+		u2w_on = 0;
 #if PPP_SUPPORT        
-        exit_ppp = 1;
-        sleep(1);   // sleep 1 second
-#endif        
-        close(iSerialReceive);
-        printf("Close %s!",devname);
+		exit_ppp = 1;
+		printf("wait ppp terminate ...\n");
+		if (xSemaphoreTake(ppp_sem, 30000)!= pdTRUE)	
+		{
+			printf("wait ppp terminate fail\n");
+		}
+#endif
+		printf("Close %s!",devname);
+		lAsyncIOSerialClose(iSerialReceive);
         iSerialReceive = 0;
         vQueueDelete(xSerialRxQueue);
     }
@@ -658,7 +669,7 @@ void cmd_on(int argc, char* argv[])
 {
     if (u2w_on)
     {
-        printf("Actived!");
+        printf("Actived!\n");
         return;
     }
 #if !PPP_SUPPORT
@@ -674,6 +685,11 @@ void cmd_on(int argc, char* argv[])
 		printf("PPP working\n");
 		return;
 	}
+	if (ppp_sem == NULL)
+		vSemaphoreCreateBinary(ppp_sem);
+		
+	if (ppp_sem)
+		xSemaphoreTake(ppp_sem,0);
 #endif
     // open uart device
     if ( pdTRUE == lAsyncIOSerialOpen( devname, &iSerialReceive,  baudrate[baudid]) )
@@ -687,7 +703,7 @@ void cmd_on(int argc, char* argv[])
             xTaskCreate( pppos_server_thread, "ppp_server", 4096, xSerialRxQueue,
                      tskIDLE_PRIORITY + 4, &hSerialTask );
         else 
-            xTaskCreate( pppos_client_thread, "ppp_client", 4096, xSerialRxQueue,
+            xTaskCreate( pppos_client_thread, "ppp_client", 8192, xSerialRxQueue,
                      tskIDLE_PRIORITY + 4, &hSerialTask );
 #else
         /* Create a Task which waits to receive bytes. */
@@ -695,7 +711,6 @@ void cmd_on(int argc, char* argv[])
                      tskIDLE_PRIORITY + 4, &hSerialTask );
 #endif                     
         u2w_on = 1;
-        
     }
 }
 
@@ -709,9 +724,7 @@ void cmd_on(int argc, char* argv[])
 
 void cmd_off(int argc, char* argv[])
 {
-    exit_u2w();
-    u2w_on = 0;
-    printf("turn off %s\n",__FUNCTION__);
+	exit_u2w();
 }
 
 //
@@ -798,7 +811,6 @@ void cmd_xmt(int argc, char* argv[])
 //
 void cmd_xmodem(int argc, char* argv[])
 {
-	extern int u2w_on;
     int c, ret=0, op=-1;
     char *tbuf=NULL;
     static unsigned int addr=0, len=0x10000;
@@ -895,4 +907,3 @@ end_xmodem:
         free(tbuf);
     return;
 }
-
