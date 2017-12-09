@@ -19,7 +19,11 @@
 #include "fs_port.h"	/* porting of file system */
 
 #define MAX_FSCMD   4
+#define MAX_FD		8
+#define MAX_DD		4
 
+static FIL filefd[MAX_FD];
+static DIR dird[MAX_DD];
 static int filesystem_inited = 0;
 static xQueueHandle fsrcvq;
 static xTaskHandle hFsTask;
@@ -45,6 +49,66 @@ static void free_msgblk(FS_MSG *msg)
 }
 
 //
+// utility to map file descriptor to 
+//	real file structure
+//
+static int get_fd()
+{
+	int i;
+	for (i=0;i<MAX_FD;i++)
+	{
+		if (filefd[i].obj.fs == NULL)
+			return (i|0x80);
+	}
+	return -FR_TOO_MANY_OPEN_FILES;
+}
+
+static void free_fd(int fd)
+{
+	fd = (fd & 0x7f);
+	if (fd>=0 && fd < MAX_FD)
+		memset(&filefd[fd],0,sizeof(FIL));
+}
+
+static FIL *get_fp(int fd)
+{
+	fd = (fd & 0x7f);
+	if (fd>=0 && fd < MAX_FD)
+		return &filefd[fd];
+	return NULL;
+}
+
+//
+// utility to map file descriptor to 
+//	real file structure
+//
+static int get_dd()
+{
+	int i;
+	for (i=0;i<MAX_DD;i++)
+	{
+		if (dird[i].obj.fs == NULL)
+			return (i|0x80);
+	}
+	return -FR_TOO_MANY_OPEN_FILES;
+}
+
+static void free_dd(int dd)
+{
+	dd = (dd & 0x7f);
+	if (dd>=0 && dd < MAX_DD)
+		memset(&dird[dd],0,sizeof(DIR));
+}
+
+static DIR *get_dp(int dd)
+{
+	dd = (dd & 0x7f);
+	if (dd>=0 && dd < MAX_DD)
+		return &dird[dd];
+	return NULL;
+}
+
+//
 //  function: do_fs
 //      intiial RAM¡@file system
 //  parameters
@@ -53,9 +117,11 @@ static void free_msgblk(FS_MSG *msg)
 void do_fs(void *parm)
 {
     FATFS fs,*pfs;
+    FIL *fp;
+    DIR *dp;
     FS_MSG *msg;
     BYTE work[_MAX_SS]; /* Work area (larger is better for processing time) */
-    int res;
+    int res,fd,dd;
     DWORD fre_clust, fre_sect, tot_sect;
     
     res = f_mkfs("", FM_ANY, 0, work, sizeof work);
@@ -95,46 +161,118 @@ void do_fs(void *parm)
         switch(msg->id)
         {
             case FS_OPEN:
-                msg->res = f_open((FIL *)msg->args[0], (const char*)msg->args[1], *(BYTE *)msg->args[2]);
+            	fd = get_fd();
+            	if (fd<0)
+            	{		
+					msg->res = fd;
+					break;
+				}
+				fp = get_fp(fd);
+                msg->res = f_open(fp, (const char*)msg->args[1], *(BYTE *)msg->args[2]);
+                if (msg->res ==FR_OK)
+                	msg->args[0] = (void *)fd;
             break;
             case FS_CLOSE:
-                msg->res = f_close((FIL *)msg->args[0]);
+            	fd = (int)msg->args[0];
+            	fp = get_fp(fd);
+            	if (fp)
+            	{	
+                	msg->res = f_close(fp);
+                	free_fd(fd);
+                }
+                else
+                	msg->res = FR_NO_FILE;
             break;
             case FS_READ:
-                msg->res = f_read((FIL *)msg->args[0], (const char*)msg->args[1], (UINT)msg->args[2], &res);
-                msg->args[2] = res; // read bytes
+            	fp = get_fp((int)msg->args[0]);
+            	if (fp)
+            	{	
+                	msg->res = f_read(fp, (const char*)msg->args[1], 
+                		(UINT)msg->args[2], &res);
+                	msg->args[2] = (void *)res; // read bytes
+            	}
+            	else
+            		msg->res = FR_NO_FILE;
             break;
             case FS_WRITE:
-                msg->res = f_write((FIL *)msg->args[0], (const char*)msg->args[1], *(BYTE *)msg->args[2], &res);
-                msg->args[2] = res; // write bytes
+            	fp = get_fp((int)msg->args[0]);
+            	if (fp)
+            	{	
+                	msg->res = f_write(fp, (const char*)msg->args[1], 
+                		*(BYTE *)msg->args[2], &res);
+                	msg->args[2] = (void *)res; // write bytes
+            	}
+            	else
+            		msg->res = FR_NO_FILE;
             break;
             case FS_UNLINK:
                 msg->res = f_unlink((char*)msg->args[0]);
             break;
             case FS_LSEEK:
-                msg->res = f_lseek((FIL*)msg->args[0],(FSIZE_t)msg->args[1]);
+            	fp = get_fp((int)msg->args[0]);
+            	if (fp)
+                	msg->res = f_lseek(fp,(FSIZE_t)msg->args[1]);
+                else
+                	msg->res = FR_NO_FILE;
             break;
             case FS_TURNCATE:
-                msg->res = f_truncate((FIL*)msg->args[0]);
+            	fp = get_fp((int)msg->args[0]);
+            	if (fp)
+                	msg->res = f_truncate(fp);
+                else
+                	msg->res = FR_NO_FILE;
             break;
             case FS_SYNC:
-                msg->res = f_sync((FIL*)msg->args[0]);
+            	fp = get_fp((int)msg->args[0]);
+            	if (fp)
+                	msg->res = f_sync(fp);
+                else
+                	msg->res = FR_NO_FILE;
             break;
-            case FS_OPENDIR: 
-                msg->res = f_opendir((DIR* )msg->args[0], (const char*)msg->args[1]);
+            case FS_OPENDIR:
+            	dd = get_dd();
+            	if (dd<0)
+            	{
+            		msg->res = dd;
+            		break;
+            	}		 
+            	dp = get_dp(dd);
+                msg->res = f_opendir(dp, (const char*)msg->args[1]);
+                if (msg->res ==FR_OK)
+               		msg->args[0] = (void *)dd;
             break;
             case FS_CLOSEDIR:
-                msg->res = f_closedir((DIR* )msg->args[0]);
+            	dd = (int)msg->args[0];
+            	dp = get_dp(dd);
+            	if (dp)
+            	{	
+                	msg->res = f_closedir(dp);
+                	free_dd(dd);
+                }
+                else
+                	msg->res = FR_INT_ERR;
             break;
             case FS_READDIR:
-                msg->res = f_readdir((DIR* )msg->args[0], (FILINFO *)msg->args[1]);
+            	dp = get_dp((int)msg->args[0]);
+            	if (dp)
+                	msg->res = f_readdir(dp,(FILINFO *)msg->args[1]);
+                else
+                	msg->res = FR_INT_ERR;
             break;
             case FS_FINDFIRST:
-                msg->res = f_findfirst((DIR*)msg->args[0],(FILINFO*)msg->args[1],
-                    (const TCHAR*)msg->args[2],(const TCHAR*)msg->args[3]);
+            	dp = get_dp((int)msg->args[0]);
+            	if (dp)
+                	msg->res = f_findfirst(dp,(FILINFO*)msg->args[1],
+                    	(const TCHAR*)msg->args[2],(const TCHAR*)msg->args[3]);
+				else
+					msg->res = FR_INT_ERR;                   	
             break;
             case FS_FINDNEXT:
-                msg->res = f_findnext((DIR*)msg->args[0],(FILINFO*)msg->args[1]);
+            	dp = get_dp((int)msg->args[0]);
+            	if (dp)
+                	msg->res = f_findnext(dp,(FILINFO*)msg->args[1]);
+                else
+                	msg->res = FR_INT_ERR;
             break;
             case FS_MKDIR:
                 msg->res = f_mkdir((const TCHAR*)msg->args[0]);
@@ -164,6 +302,9 @@ void do_fs(void *parm)
                 msg->res = FR_INT_ERR;
             break;
         }
+        // convert error code to minus value
+        if (msg->res>0)
+        	msg->res = -(msg->res);
         xSemaphoreGive(msg->sem);
     }
 end_do_fs:
@@ -200,7 +341,8 @@ void fs_init()
         xSemaphoreTake(msg->sem, portMAX_DELAY);
         free_msgblk(msg);
     }
-    
+   	memset((char *)filefd,0,sizeof(FIL)*MAX_FD);
+   	memset((char *)dird,0,sizeof(DIR)*MAX_DD);
     // create a receive queue
     fsrcvq = xQueueCreate( MAX_FSCMD, sizeof ( void * ) );
     if (fsrcvq==NULL)
@@ -215,7 +357,7 @@ end_fs_init:
 }
 
 /* Open or create a file */
-FRESULT fs_open (FIL* fp, const char* path, BYTE mode)
+int fs_open (const char* path, BYTE mode)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -224,7 +366,7 @@ FRESULT fs_open (FIL* fp, const char* path, BYTE mode)
     if(msg)
     {
         msg->id = FS_OPEN;
-        msg->args[0] = (void *)fp;
+        msg->args[0] = (void *)0;
         msg->args[1] = (void *)path;
         msg->args[2] = (void *)&mode;
         if( xQueueSend( fsrcvq,
@@ -233,21 +375,24 @@ FRESULT fs_open (FIL* fp, const char* path, BYTE mode)
         {
             // wait fs thread complete the request
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
-                res = msg->res;
+            {	
+                if (msg->res == FR_OK)
+                	res =  (int)msg->args[0];
+            }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Close an open file object */
-FRESULT fs_close (FIL* fp)
+int fs_close (int fd)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -256,7 +401,7 @@ FRESULT fs_close (FIL* fp)
     if(msg)
     {
         msg->id = FS_CLOSE;
-        msg->args[0] = (void *)fp;
+        msg->args[0] = (void *)fd;
         if( xQueueSend( fsrcvq,
                        ( void * ) &msg,
                        ( portTickType ) 10 ) == pdPASS )
@@ -265,19 +410,19 @@ FRESULT fs_close (FIL* fp)
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
                 res = msg->res;
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }									
 
 /* Read data from the file */
-FRESULT fs_read (FIL* fp, void* buff, UINT btr, UINT* br)
+int fs_read (int fd, void* buff, UINT btr, UINT* br)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -286,7 +431,7 @@ FRESULT fs_read (FIL* fp, void* buff, UINT btr, UINT* br)
     if(msg)
     {
         msg->id = FS_READ;
-        msg->args[0] = (void *)fp;
+        msg->args[0] = (void *)fd;
         msg->args[1] = (void *)buff;
         msg->args[2] = (void *)btr;
         if( xQueueSend( fsrcvq,
@@ -297,22 +442,22 @@ FRESULT fs_read (FIL* fp, void* buff, UINT btr, UINT* br)
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
             {
                 res = msg->res;
-                *br = msg->args[2];
+                *br = (UINT)msg->args[2];
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Write data to the file */
-FRESULT fs_write (FIL* fp, const void* buff, UINT btw, UINT* bw)
+int fs_write (int fd, const void* buff, UINT btw, UINT* bw)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -321,7 +466,7 @@ FRESULT fs_write (FIL* fp, const void* buff, UINT btw, UINT* bw)
     if(msg)
     {
         msg->id = FS_WRITE;
-        msg->args[0] = (void *)fp;
+        msg->args[0] = (void *)fd;
         msg->args[1] = (void *)buff;
         msg->args[2] = (void *)&btw;
         if( xQueueSend( fsrcvq,
@@ -332,22 +477,119 @@ FRESULT fs_write (FIL* fp, const void* buff, UINT btw, UINT* bw)
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
             {
                 res = msg->res;
-                *bw = msg->args[2]; // real write data bytes
+                *bw = (UINT)msg->args[2]; // real write data bytes
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
+/* Move file pointer of the file object */
+int fs_lseek (int fd, FSIZE_t ofs)
+{
+    int res=FR_OK;
+    FS_MSG *msg;
+    
+    msg=get_msgblk();
+    if(msg)
+    {
+        msg->id = FS_LSEEK;
+        msg->args[0] = (void *)fd;
+        msg->args[1] = (FSIZE_t)ofs;
+        if( xQueueSend( fsrcvq,
+                       ( void * ) &msg,
+                       ( portTickType ) 10 ) == pdPASS )
+        {
+            // wait fs thread complete the request
+            if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
+            {
+                res = msg->res;
+            }
+            else
+                res = -FR_NOT_READY;
+        }
+        else    /* Failed to post the message, even after 10 ticks. */
+            res = -FR_NOT_READY;
+        free_msgblk(msg);
+    }
+    else
+        res = -FR_NOT_READY;
+    return res;
+}							
+
+/* Truncate the file */
+int fs_truncate (int fd)
+{
+     int res=FR_OK;
+    FS_MSG *msg;
+    
+    msg=get_msgblk();
+    if(msg)
+    {
+        msg->id = FS_TURNCATE;
+        msg->args[0] = (void *)fd;
+        if( xQueueSend( fsrcvq,
+                       ( void * ) &msg,
+                       ( portTickType ) 10 ) == pdPASS )
+        {
+            // wait fs thread complete the request
+            if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
+            {
+                res = msg->res;
+            }
+            else
+                res = -FR_NOT_READY;
+        }
+        else    /* Failed to post the message, even after 10 ticks. */
+            res = -FR_NOT_READY;
+        free_msgblk(msg);
+    }
+    else
+        res = -FR_NOT_READY;
+    return res;
+}
+
+/* Flush cached data of the writing file */
+int fs_sync (int fd)
+{
+    int res=FR_OK;
+    FS_MSG *msg;
+    
+    msg=get_msgblk();
+    if(msg)
+    {
+        msg->id = FS_SYNC;
+        msg->args[0] = (void *)fd;
+        if( xQueueSend( fsrcvq,
+                       ( void * ) &msg,
+                       ( portTickType ) 10 ) == pdPASS )
+        {
+            // wait fs thread complete the request
+            if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
+            {
+                res = msg->res;
+            }
+            else
+                res = -FR_NOT_READY;
+        }
+        else    /* Failed to post the message, even after 10 ticks. */
+            res = -FR_NOT_READY;
+        free_msgblk(msg);
+    }
+    else
+        res = -FR_NOT_READY;
+    return res;
+}				
+
 /* Open a directory */
-FRESULT fs_opendir (DIR* dp, const char* path)			
+int fs_opendir (const char* path)			
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -356,7 +598,7 @@ FRESULT fs_opendir (DIR* dp, const char* path)
     if(msg)
     {
         msg->id = FS_OPENDIR;
-        msg->args[0] = (void *)dp;
+        msg->args[0] = (void *)0;
         msg->args[1] = (void *)path;
         if( xQueueSend( fsrcvq,
                        ( void * ) &msg,
@@ -364,21 +606,24 @@ FRESULT fs_opendir (DIR* dp, const char* path)
         {
             // wait fs thread complete the request
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
-                res = msg->res;
+            {	
+                if (msg->res == FR_OK)
+                	res = (int) msg->args[0];
+            }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Close an open directory */	
-FRESULT fs_closedir (DIR* dp)										
+int fs_closedir (int dd)										
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -387,7 +632,7 @@ FRESULT fs_closedir (DIR* dp)
     if(msg)
     {
         msg->id = FS_CLOSEDIR;
-        msg->args[0] = (void *)dp;
+        msg->args[0] = (void *)dd;
         if( xQueueSend( fsrcvq,
                        ( void * ) &msg,
                        ( portTickType ) 10 ) == pdPASS )
@@ -396,19 +641,19 @@ FRESULT fs_closedir (DIR* dp)
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
                 res = msg->res;
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Read a directory item */
-FRESULT fs_readdir (DIR* dp, FILINFO* fno)						
+int fs_readdir (int dd, FILINFO* fno)						
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -417,7 +662,7 @@ FRESULT fs_readdir (DIR* dp, FILINFO* fno)
     if(msg)
     {
         msg->id = FS_READDIR;
-        msg->args[0] = (void *)dp;
+        msg->args[0] = (void *)dd;
         msg->args[1] = (void *)fno;
         if( xQueueSend( fsrcvq,
                        ( void * ) &msg,
@@ -427,19 +672,19 @@ FRESULT fs_readdir (DIR* dp, FILINFO* fno)
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
                 res = msg->res;
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Get number of free clusters on the drive */
-FRESULT fs_getfree (const char* path, DWORD* nclst, FATFS** fatfs)	
+int fs_getfree (const char* path, DWORD* nclst, FATFS** fatfs)	
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -462,19 +707,19 @@ FRESULT fs_getfree (const char* path, DWORD* nclst, FATFS** fatfs)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Delete an existing file or directory */
-FRESULT fs_unlink (const char* path)
+int fs_unlink (const char* path)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -494,19 +739,19 @@ FRESULT fs_unlink (const char* path)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }		    
  
 /* Get file status */
-FRESULT fs_stat (const char* path, FILINFO* fno)					
+int fs_stat (const char* path, FILINFO* fno)					
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -527,19 +772,19 @@ FRESULT fs_stat (const char* path, FILINFO* fno)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 			
 /* Find first file */
-FRESULT fs_findfirst (DIR* dp, FILINFO* fno, const char* path, const char* pattern)
+int fs_findfirst (int dd, FILINFO* fno, const char* path, const char* pattern)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -548,7 +793,7 @@ FRESULT fs_findfirst (DIR* dp, FILINFO* fno, const char* path, const char* patte
     if(msg)
     {
         msg->id = FS_FINDFIRST;
-        msg->args[0] = (void *)dp;
+        msg->args[0] = (void *)dd;
         msg->args[1] = (void *)fno;
         msg->args[2] = (void *)path;
         msg->args[3] = (void *)pattern;
@@ -562,18 +807,18 @@ FRESULT fs_findfirst (DIR* dp, FILINFO* fno, const char* path, const char* patte
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 /* Find next file */
-FRESULT fs_findnext (DIR* dp, FILINFO* fno)
+int fs_findnext (int dd, FILINFO* fno)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -582,7 +827,7 @@ FRESULT fs_findnext (DIR* dp, FILINFO* fno)
     if(msg)
     {
         msg->id = FS_FINDNEXT;
-        msg->args[0] = (void *)dp;
+        msg->args[0] = (void *)dd;
         msg->args[1] = (void *)fno;
         if( xQueueSend( fsrcvq,
                        ( void * ) &msg,
@@ -594,19 +839,19 @@ FRESULT fs_findnext (DIR* dp, FILINFO* fno)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Create a sub directory */
-FRESULT fs_mkdir (const char* path)
+int fs_mkdir (const char* path)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -626,18 +871,18 @@ FRESULT fs_mkdir (const char* path)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 /* Change current directory */
-FRESULT fs_chdir (const char* path)
+int fs_chdir (const char* path)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -657,18 +902,18 @@ FRESULT fs_chdir (const char* path)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }								
 /* Get current directory */
-FRESULT fs_getcwd (char* buff, UINT len)
+int fs_getcwd (char* buff, UINT len)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -689,19 +934,19 @@ FRESULT fs_getcwd (char* buff, UINT len)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
 
 /* Rename/Move a file or directory */
-FRESULT fs_rename (const char* path_old, const char* path_new)
+int fs_rename (const char* path_old, const char* path_new)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -722,112 +967,17 @@ FRESULT fs_rename (const char* path_old, const char* path_new)
                 res = msg->res;
             }
             else
-                res = FR_NOT_READY;
+                res = -FR_NOT_READY;
         }
         else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
+            res = -FR_NOT_READY;
         free_msgblk(msg);
     }
     else
-        res = FR_NOT_READY;
+        res = -FR_NOT_READY;
     return res;
 }
-/* Move file pointer of the file object */
-FRESULT fs_lseek (FIL* fp, FSIZE_t ofs)
-{
-    int res=FR_OK;
-    FS_MSG *msg;
-    
-    msg=get_msgblk();
-    if(msg)
-    {
-        msg->id = FS_LSEEK;
-        msg->args[0] = (void *)fp;
-        msg->args[1] = (FSIZE_t)ofs;
-        if( xQueueSend( fsrcvq,
-                       ( void * ) &msg,
-                       ( portTickType ) 10 ) == pdPASS )
-        {
-            // wait fs thread complete the request
-            if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
-            {
-                res = msg->res;
-            }
-            else
-                res = FR_NOT_READY;
-        }
-        else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
-        free_msgblk(msg);
-    }
-    else
-        res = FR_NOT_READY;
-    return res;
-}							
-
-/* Truncate the file */
-FRESULT fs_truncate (FIL* fp)
-{
-     int res=FR_OK;
-    FS_MSG *msg;
-    
-    msg=get_msgblk();
-    if(msg)
-    {
-        msg->id = FS_TURNCATE;
-        msg->args[0] = (void *)fp;
-        if( xQueueSend( fsrcvq,
-                       ( void * ) &msg,
-                       ( portTickType ) 10 ) == pdPASS )
-        {
-            // wait fs thread complete the request
-            if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
-            {
-                res = msg->res;
-            }
-            else
-                res = FR_NOT_READY;
-        }
-        else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
-        free_msgblk(msg);
-    }
-    else
-        res = FR_NOT_READY;
-    return res;
-}
-
-/* Flush cached data of the writing file */
-FRESULT fs_sync (FIL* fp)
-{
-    int res=FR_OK;
-    FS_MSG *msg;
-    
-    msg=get_msgblk();
-    if(msg)
-    {
-        msg->id = FS_SYNC;
-        msg->args[0] = (void *)fp;
-        if( xQueueSend( fsrcvq,
-                       ( void * ) &msg,
-                       ( portTickType ) 10 ) == pdPASS )
-        {
-            // wait fs thread complete the request
-            if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
-            {
-                res = msg->res;
-            }
-            else
-                res = FR_NOT_READY;
-        }
-        else    /* Failed to post the message, even after 10 ticks. */
-            res = FR_NOT_READY;
-        free_msgblk(msg);
-    }
-    else
-        res = FR_NOT_READY;
-    return res;
-}						
+		
 
 #if 0
 

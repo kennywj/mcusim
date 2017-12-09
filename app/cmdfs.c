@@ -51,7 +51,7 @@ void cmd_dir(int argc, char* argv[])
     FATFS *fs;
     unsigned int i, j;
     FRESULT res;
-    DIR dir;
+    int dd;
     FILINFO finfo;
     char path[64]="/";
     unsigned long total, fc, dc;
@@ -61,8 +61,8 @@ void cmd_dir(int argc, char* argv[])
     finfo.altname[0] = 0;
 #endif
     finfo.fname[0] = 0;
-    res = fs_opendir(&dir, pwd);
-    if (res == FR_OK) 
+    dd = fs_opendir(pwd);
+    if (dd > 0) 
     {
         total = 0;
         fc = 0;
@@ -72,7 +72,7 @@ void cmd_dir(int argc, char* argv[])
         path[i++] = '/';
         for (;;) 
         {
-            res = fs_readdir(&dir, &finfo);
+            res = fs_readdir(dd, &finfo);
             if (res != FR_OK || !finfo.fname[0]) 
                 break;
             if (_FS_RPATH && finfo.fname[0] == '.') 
@@ -104,7 +104,7 @@ void cmd_dir(int argc, char* argv[])
             }
         }
         path[--i] = '\0';
-        fs_closedir(&dir);
+        fs_closedir(dd);
         
         printf("\n%4lu File(s),%10lu bytes total%4lu Dir(s)\n",fc, total, dc);
     }
@@ -112,7 +112,7 @@ void cmd_dir(int argc, char* argv[])
     res = fs_getfree("", &fre_clust, &fs);
     if (res)
     {
-        printf("Get free space fail\n");
+        printf("Get free space fail %d\n", res);
         return;
     }
     /* Get total sectors and free sectors */
@@ -134,21 +134,20 @@ void cmd_dir(int argc, char* argv[])
 //
 void cmd_touch(int argc, char* argv[])
 {
-    int i;
+    int i,res;
     unsigned int bw;    // bytes writed
-    FRESULT res;
-    FIL file;
+    int fd;
     char path[64]={0};
     
     if (argc>1)
     {
         strcat(path,argv[1]);
-        res = fs_open(&file,path,FA_CREATE_NEW| FA_WRITE);
-        if (res == FR_OK)
+        fd = fs_open(path,FA_CREATE_NEW| FA_WRITE);
+        if (fd > 0)
         {
             for (i=2;i<argc;i++)
             {
-                res = fs_write(&file,argv[i],strlen(argv[i]),&bw);
+                res = fs_write(fd,argv[i],strlen(argv[i]),&bw);
                 if ( res!=FR_OK || bw < strlen(argv[i]) )
                 {
                     printf("write error %d\n",res);
@@ -156,11 +155,11 @@ void cmd_touch(int argc, char* argv[])
                 }
             } 
         }
-        else if(res == FR_EXIST)
+        else if (fd == -FR_EXIST)
             printf("create: cannot create file '%s' , File exists. \r\n",path);
         else
-            printf("create:cannot create '%s, res=%d'. \r\n",path, res);
-        fs_close(&file);
+            printf("create:cannot create '%s, res=%d'. \r\n",path, fd);
+        fs_close(fd);
     }
 }
 
@@ -169,21 +168,20 @@ void cmd_touch(int argc, char* argv[])
   * @param  path: Object name.
   * @retval FR_OK: if empty OK. Other value if error.
   */
-static FRESULT empty_dir (char* path)
+static int empty_dir (char* path)
 {
     UINT i, j;
-    FRESULT fr;
     FILINFO fno;
-    DIR dir;
+    int dd,fr;
 
-    fr = fs_opendir(&dir, path);
-    if (fr == FR_OK)
+    dd = fs_opendir(path);
+    if (dd>0)
     {
         for (i = 0; path[i]; i++) ;
         path[i++] = '/';
         for (;;)
         {
-            fr = fs_readdir(&dir, &fno);
+            fr = fs_readdir(dd, &fno);
             if (fr != FR_OK || !fno.fname[0]) break;
             if (_FS_RPATH && fno.fname[0] == '.') continue;
             j = 0;
@@ -199,9 +197,10 @@ static FRESULT empty_dir (char* path)
             if (fr != FR_OK) break;
         }
         path[--i] = '\0';
+	    fs_closedir(dd);
     }
-    fs_closedir(&dir);
-
+    else
+    	fr = dd;
     return fr;
 }
 
@@ -253,7 +252,7 @@ void cmd_del(int argc, char* argv[])
 //
 void cmd_mkdir(int argc, char* argv[])
 {
-    FRESULT res;
+    int res;
     char path[64]={0};
     
     if (argc>1)
@@ -277,7 +276,7 @@ void cmd_mkdir(int argc, char* argv[])
 //
 void cmd_cd(int argc, char* argv[])
 {
-    FRESULT res;
+    int res;
     char path[64]={0};
     
     if (argc>1)
@@ -306,7 +305,7 @@ void cmd_cd(int argc, char* argv[])
 //
 void cmd_pwd(int argc, char* argv[])
 {
-    FRESULT res;
+    int res;
     char path[512]={0};
     
     res = fs_getcwd(path, 511);
@@ -325,7 +324,7 @@ void cmd_pwd(int argc, char* argv[])
 //
 void cmd_rename(int argc, char* argv[])
 {
-    FRESULT res;
+    int res;
     char path[512]={0};
     
     if (argc > 2)
@@ -349,7 +348,7 @@ void cmd_rename(int argc, char* argv[])
 void cmd_stat(int argc, char* argv[])
 {
     FILINFO fno;
-    FRESULT res;
+    int res;
     
     if (argc > 1)
     {
@@ -369,7 +368,7 @@ void cmd_stat(int argc, char* argv[])
                (fno.fattrib & AM_ARC) ? 'A' : '-');
         break;
 
-        case FR_NO_FILE:
+        case -FR_NO_FILE:
             printf("It is not exist.\n");
         break;
 
@@ -391,11 +390,11 @@ void cmd_stat(int argc, char* argv[])
   */
 static int copy_file( const char* psrc, const char* pdst, unsigned char fwmode )
 {
-    FRESULT res;
+    int res;
     UINT br = 0;
     UINT bw = 0;
     BYTE *fbuf = 0;
-    FIL	fsrc, fdst;
+    int	fsrc, fdst;
     unsigned int buffer_size = 2048;
 
     fbuf = (BYTE *)malloc ( buffer_size );
@@ -409,26 +408,26 @@ static int copy_file( const char* psrc, const char* pdst, unsigned char fwmode )
             fwmode = FA_CREATE_NEW;
         else
             fwmode = FA_CREATE_ALWAYS;
-        res = fs_open( &fsrc, ( const TCHAR * )psrc, FA_READ | FA_OPEN_ALWAYS );
-        if ( res == FR_OK )
+        fsrc = fs_open(( const TCHAR * )psrc, FA_READ | FA_OPEN_ALWAYS );
+        if ( fsrc > 0 )
         {
-            res = fs_open( &fdst, ( const TCHAR * )pdst, FA_WRITE | fwmode );
-            if ( res == FR_OK )
+            fdst = fs_open(( const TCHAR * )pdst, FA_WRITE | fwmode );
+            if ( fdst > 0 )
             {
-                while ( res == FR_OK )
+                do
                 {
-                    res = fs_read( &fsrc, fbuf, buffer_size, ( UINT* )&br );
-                    if ( res || br == 0 )
+                    res = fs_read( fsrc, fbuf, buffer_size, ( UINT* )&br );
+                    if ( res == FR_OK || br == 0 )
                         break;
-                    res = fs_write( &fdst, fbuf, ( UINT )br, ( UINT* )&bw );
-                    if ( res || bw < br )
+                    res = fs_write( fdst, fbuf, ( UINT )br, ( UINT* )&bw );
+                    if ( res == FR_OK || bw < br )
                         break;
-                }
+                }while ( res == FR_OK );
 
-                fs_close( &fdst );
+                fs_close( fdst );
             }
 
-            fs_close( &fsrc );
+            fs_close( fsrc );
         }
     }
     if (fbuf)
@@ -446,7 +445,7 @@ static int copy_file( const char* psrc, const char* pdst, unsigned char fwmode )
 //
 void cmd_cp(int argc, char* argv[])
 {
-    FRESULT res;
+    int res;
     FILINFO fno;
     int c, overwrite=0;
     char *src=NULL, *dest=NULL;
@@ -479,7 +478,7 @@ void cmd_cp(int argc, char* argv[])
     {
         // if new file/folder exist?
         res = fs_stat(dest, &fno);
-        if (res != FR_NO_FILE)
+        if (res != -FR_NO_FILE)
         {
             if (res == FR_OK)
                 printf("new file/folder exist\n");
@@ -490,7 +489,7 @@ void cmd_cp(int argc, char* argv[])
         res = fs_stat(src, &fno);
         if (res != FR_OK)
         {
-            if (res == FR_NO_FILE)
+            if (res == -FR_NO_FILE)
                 printf("file not exits\n");
             else
                 printf("get file satus error\n");
@@ -521,9 +520,8 @@ end_cmd_cp:
 //
 void cmd_cat(int argc, char* argv[])
 {
-    FRESULT res;
-    FILINFO fno;
-    FIL dfp,sfp;
+    int res;
+    int df,sf;
     int c, overwrite=0,binary =0;
     unsigned int rlen,wlen,size;
     char *src=NULL, *dest=NULL;
@@ -569,10 +567,10 @@ void cmd_cat(int argc, char* argv[])
         if (!buf)
             goto end_cmd_cat;
         memset(buf,0,2049);
-        res = fs_open(&dfp, dest, FA_READ);
-        if (res == FR_OK)
+        df = fs_open(dest, FA_READ);
+        if (df > 0)
         {
-            res = fs_read(&dfp,buf,2048,&rlen);
+            res = fs_read(df,buf,2048,&rlen);
             if (res == FR_OK)
             {
                 if (binary)
@@ -581,10 +579,10 @@ void cmd_cat(int argc, char* argv[])
                     printf("%s",buf);
                 memset(buf,0,rlen);
             }
-            fs_close(&dfp);
+            fs_close(df);
         }
         else
-            printf("cannot open file '%s': %d\n",dest, res);
+            printf("cannot open file '%s': %d\n",dest, df);
         free(buf);
         goto end_cmd_cat;    
     }
@@ -592,33 +590,33 @@ void cmd_cat(int argc, char* argv[])
     buf = malloc(2048);
     if (!buf)
         goto end_cmd_cat;
-    res = fs_open(&dfp, dest, (FA_OPEN_APPEND|FA_WRITE));
-    if (res == FR_OK)
+    df = fs_open(dest, (FA_OPEN_APPEND|FA_WRITE));
+    if (df > 0)
     {
-        res = fs_open(&sfp, src, FA_READ);
-        if (res == FR_OK)
+        sf = fs_open(src, FA_READ);
+        if (sf > 0)
         {
             if (overwrite)
             {
                 // seek to the file head
-                res = fs_lseek(&dfp,0);
+                res = fs_lseek(df,0);
                 if (res != FR_OK)
                     goto end_cat;
             }    
             while(1)
             {    
-                res = fs_read(&sfp,buf,2048,&rlen);
+                res = fs_read(sf,buf,2048,&rlen);
                 if (res != FR_OK || rlen == 0)
                     break;
                 // write to dest file
-                res = fs_write(&dfp,buf,rlen,&wlen);
+                res = fs_write(df,buf,rlen,&wlen);
                 if (res != FR_OK || wlen < rlen)
                     break;
             } 
         end_cat:    
-            fs_close(&sfp);
+            fs_close(sf);
         }    
-        fs_close(&dfp);
+        fs_close(df);
     }
     free(buf);
 end_cmd_cat:  
