@@ -199,7 +199,7 @@ void do_fs(void *parm)
             	if (fp)
             	{	
                 	msg->res = f_write(fp, (const char*)msg->args[1], 
-                		*(BYTE *)msg->args[2], &res);
+                		(UINT)msg->args[2], &res);
                 	msg->args[2] = (void *)res; // write bytes
             	}
             	else
@@ -422,7 +422,7 @@ int fs_close (int fd)
 }									
 
 /* Read data from the file */
-int fs_read (int fd, void* buff, UINT btr, UINT* br)
+int fs_read (int fd, void* buff, UINT btr)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -441,8 +441,10 @@ int fs_read (int fd, void* buff, UINT btr, UINT* br)
             // wait fs thread complete the request
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
             {
-                res = msg->res;
-                *br = (UINT)msg->args[2];
+                if (msg->res==FR_OK)
+					res = (int)msg->args[2];
+				else 
+					res = msg->res;
             }
             else
                 res = -FR_NOT_READY;
@@ -457,7 +459,7 @@ int fs_read (int fd, void* buff, UINT btr, UINT* br)
 }
 
 /* Write data to the file */
-int fs_write (int fd, const void* buff, UINT btw, UINT* bw)
+int fs_write (int fd, const void* buff, UINT btw)
 {
     int res=FR_OK;
     FS_MSG *msg;
@@ -468,7 +470,7 @@ int fs_write (int fd, const void* buff, UINT btw, UINT* bw)
         msg->id = FS_WRITE;
         msg->args[0] = (void *)fd;
         msg->args[1] = (void *)buff;
-        msg->args[2] = (void *)&btw;
+        msg->args[2] = (void *)btw;
         if( xQueueSend( fsrcvq,
                        ( void * ) &msg,
                        ( portTickType ) 10 ) == pdPASS )
@@ -476,8 +478,10 @@ int fs_write (int fd, const void* buff, UINT btw, UINT* bw)
             // wait fs thread complete the request
             if (pdTRUE == xSemaphoreTake(msg->sem, portMAX_DELAY))
             {
-                res = msg->res;
-                *bw = (UINT)msg->args[2]; // real write data bytes
+				if (msg->res == FR_OK)
+					res = (int)msg->args[2]; // real write data bytes
+				else
+					res = msg->res;
             }
             else
                 res = -FR_NOT_READY;

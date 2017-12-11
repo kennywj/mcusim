@@ -135,7 +135,7 @@ void cmd_dir(int argc, char* argv[])
 void cmd_touch(int argc, char* argv[])
 {
     int i,res;
-    unsigned int bw;    // bytes writed
+    int bw;    // bytes writed
     int fd;
     char path[64]={0};
     
@@ -147,8 +147,8 @@ void cmd_touch(int argc, char* argv[])
         {
             for (i=2;i<argc;i++)
             {
-                res = fs_write(fd,argv[i],strlen(argv[i]),&bw);
-                if ( res!=FR_OK || bw < strlen(argv[i]) )
+                bw = fs_write(fd,argv[i],strlen(argv[i]));
+                if ( bw < strlen(argv[i]) )
                 {
                     printf("write error %d\n",res);
                     break;
@@ -391,8 +391,7 @@ void cmd_stat(int argc, char* argv[])
 static int copy_file( const char* psrc, const char* pdst, unsigned char fwmode )
 {
     int res;
-    UINT br = 0;
-    UINT bw = 0;
+    int br = 0, bw = 0;
     BYTE *fbuf = 0;
     int	fsrc, fdst;
     unsigned int buffer_size = 2048;
@@ -416,13 +415,13 @@ static int copy_file( const char* psrc, const char* pdst, unsigned char fwmode )
             {
                 do
                 {
-                    res = fs_read( fsrc, fbuf, buffer_size, ( UINT* )&br );
-                    if ( res == FR_OK || br == 0 )
+                    br = fs_read( fsrc, fbuf, buffer_size);
+                    if ( br <= 0 )
                         break;
-                    res = fs_write( fdst, fbuf, ( UINT )br, ( UINT* )&bw );
-                    if ( res == FR_OK || bw < br )
+                    bw = fs_write( fdst, fbuf, ( UINT )br);
+                    if ( bw < br )
                         break;
-                }while ( res == FR_OK );
+                }while (1);
 
                 fs_close( fdst );
             }
@@ -523,7 +522,7 @@ void cmd_cat(int argc, char* argv[])
     int res;
     int df,sf;
     int c, overwrite=0,binary =0;
-    unsigned int rlen,wlen,size;
+    int rlen,wlen,size;
     char *src=NULL, *dest=NULL;
     char *buf=NULL;
     
@@ -570,8 +569,8 @@ void cmd_cat(int argc, char* argv[])
         df = fs_open(dest, FA_READ);
         if (df > 0)
         {
-            res = fs_read(df,buf,2048,&rlen);
-            if (res == FR_OK)
+            rlen = fs_read(df,buf,2048);
+            if (rlen > 0)
             {
                 if (binary)
                     dump_frame(buf,rlen,"");
@@ -605,12 +604,12 @@ void cmd_cat(int argc, char* argv[])
             }    
             while(1)
             {    
-                res = fs_read(sf,buf,2048,&rlen);
-                if (res != FR_OK || rlen == 0)
+                rlen = fs_read(sf,buf,2048);
+                if (rlen <= 0)
                     break;
                 // write to dest file
-                res = fs_write(df,buf,rlen,&wlen);
-                if (res != FR_OK || wlen < rlen)
+                wlen = fs_write(df,buf,( UINT )rlen);
+                if (wlen < rlen)
                     break;
             } 
         end_cat:    

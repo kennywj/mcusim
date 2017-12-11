@@ -38,8 +38,8 @@ typedef struct _fs_msg_
 
 int fs_open (const char* path, BYTE mode);			/* Open or create a file */
 int fs_close (int fd);											/* Close an open file object */
-int fs_read (int fd, void* buff, UINT btr, UINT* br);			/* Read data from the file */
-int fs_write (int fd, const void* buff, UINT btw, UINT* bw);	/* Write data to the file */
+int fs_read (int fd, void* buff, UINT btr);			/* Read data from the file, return >=0 means real read data size */
+int fs_write (int fd, const void* buff, UINT btw);	/* Write data to the file, return >=0 means real write data size */
 int fs_lseek (int fd, FSIZE_t ofs);							/* Move file pointer of the file object */
 int fs_truncate (int fd);										/* Truncate the file */
 int fs_sync (int fd);											/* Flush cached data of the writing file */

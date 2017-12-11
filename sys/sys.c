@@ -703,7 +703,7 @@ void cmd_on(int argc, char* argv[])
             xTaskCreate( pppos_server_thread, "ppp_server", 4096, xSerialRxQueue,
                      tskIDLE_PRIORITY + 4, &hSerialTask );
         else 
-            xTaskCreate( pppos_client_thread, "ppp_client", 8192, xSerialRxQueue,
+            xTaskCreate( pppos_client_thread, "ppp_client", 4096, xSerialRxQueue,
                      tskIDLE_PRIORITY + 4, &hSerialTask );
 #else
         /* Create a Task which waits to receive bytes. */
