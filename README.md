@@ -5,6 +5,6 @@ The traffic from wireless to ameba, then forward to PC emulator via UART port.
 git clone --recursive  https://github.com/kennywj/uart2wifi.git
 
 ## usage
-"make" will generate executable program "u2w". 
-To execute "u2w" will have a command line console on screen. 
-Input the "help" command will shows available commands in system. 
+"make" will generate executable program "u2w".  
+To execute "u2w" will have a command line console on screen.  
+Input the "help" command will shows available commands in system.  
