@@ -41,6 +41,16 @@
 #include "shell.h"
 #include "crc16.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+#include "sys.h"
+#include "cmd.h"
+
+#include "AsyncIO/AsyncIO.h"
+#include "AsyncIO/AsyncIOSerial.h"
+
 #define SOH  0x01
 #define STX  0x02
 #define EOT  0x04
@@ -52,8 +62,37 @@
 #define DLY_1S 1000
 #define MAXRETRANS 25
 
-extern int _inbyte(int msec);
-extern void _outbyte(unsigned char c);
+
+static int xmodem_on=0;
+static xQueueHandle xSerialRxQueue;
+static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB0";
+static int iSerialReceive = 0;
+//static xTaskHandle hSerialTask;
+static int baudid=3;	// default 115200
+//
+// input character from uart
+//
+int _inbyte(int msec)
+{
+    int ch;
+    // wait 10 ticks = 10ms?
+    while ( pdFALSE == xQueueReceive( xSerialRxQueue, &ch, 10 ) )
+    {
+        msec-=10;
+        if (msec <= 0)
+			return -1;
+    }
+    return ch;
+}
+
+//
+// output character to uart
+//
+void _outbyte(unsigned char c)
+{
+    write(iSerialReceive, &c, 1); // include crc
+}
+
 
 static int check(int crc, const unsigned char *buf, int sz)
 {
@@ -271,6 +310,125 @@ int xmodemTransmit(unsigned char *src, int srcsz)
 }
 
 
+//
+// enable xmodemint xmodem_on
+//
+void cmd_xmodem(int argc, char* argv[])
+{
+    int i,c, ret=0, op=-1;
+    char *tbuf=NULL;
+    static unsigned int addr=0, len=0x10000;
+    
+    while ((c = getopt (argc, argv, "d:b:a:l:rw?")) != -1)
+    {
+	    switch (c) {
+		case 'd':
+			strncpy(devname,optarg,DEVICE_NAME_LEN);
+		break;
+		case 'b':
+			for(i=0; i<MAX_BAUD_NUM; i++)
+            {
+                if (strcmp(optarg,baudstr[i])==0)
+                {
+                    baudid = i;
+                    printf("set baudrate %s\n",baudstr[baudid]);
+                    break;
+                }
+            }
+		break;
+    	case 'r':
+    	    op = 0;
+	    break;
+	    case 'w':
+	        op = 1;
+	    break;
+	    case 'a':
+	        addr = atoi(optarg);
+	    break;
+	    case 'l':
+	        len = atoi(optarg);
+	    break;
+	    case '?':
+	    default:
+	        printf("usage: -r(read data from console) | -w (write data to console)>\n");
+	        goto end_xmodem;
+	    }
+    }   // end of while
+    
+    if (op == -1)
+    {
+        printf("Xmodem setting: device %s, baud %s, mode=%s, addr=%p, size = %d\n",
+			devname, baudstr[baudid], (op?"read":"write"),addr, len);
+        goto end_xmodem;
+    }
+    
+    if (xmodem_on)
+    {
+        printf("serial port inuse\n");
+        goto end_xmodem;
+    }
+    
+    if (op==0)
+    {
+        tbuf = malloc(len+128); // avoid boudary block need extra one
+        if (!tbuf)
+        {
+            printf("heap not enough, require=%d\n",len);    
+            goto end_xmodem;
+        } 
+    } 
+    // open uart device
+    if ( pdTRUE == lAsyncIOSerialOpen( devname, &iSerialReceive,  baudrate[baudid]) )
+    {
+        xSerialRxQueue = xQueueCreate( MAX_PKT_SIZE*2, sizeof ( unsigned char ) );
+        (void)lAsyncIORegisterCallback( iSerialReceive, vAsyncSerialIODataAvailableISR,
+                                        xSerialRxQueue );
+        printf("Open device %s success\n",devname);
+        
+        xmodem_on = 1;
+        
+        if (op==0)
+        {    
+            ret = xmodemReceive((unsigned char *)tbuf, len);
+            if (ret < 0) {
+		        printf("Xmodem receive error: status: %d\n", ret);
+	        }
+	        else  
+	        {
+   		        dump_frame(tbuf,ret,"receive data\n");
+		        printf("Xmodem successfully received data len=%d bytes\n", ret);
+	        }
+        }
+        else if (op==1)
+        {
+            if (xmodem_on)
+            {
+                printf("serial port inuse\n");
+                goto end_xmodem;
+            }
+        
+            if (len)
+            {   
+                ret = xmodemTransmit((unsigned char *)addr, len);
+    	        if (ret < 0)
+	    	        printf("Xmodem transmit error: status: %d\n", ret);
+	            else  
+		            printf("Xmodem successfully transmitted from %p len=%d bytes\n", addr, ret);
+		    }
+		    else
+		        printf("Xmodem transmit error: no length\n");
+        }  
+        // close device
+        lAsyncIOSerialClose(iSerialReceive);
+        iSerialReceive = 0;
+        vQueueDelete(xSerialRxQueue);
+        xmodem_on = 0;
+    }   
+end_xmodem:	
+     if (tbuf)
+        free(tbuf);
+    return;
+}
 
 
 

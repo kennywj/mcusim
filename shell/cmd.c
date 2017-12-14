@@ -17,14 +17,14 @@ struct cmd_tbl commands[]=
 {
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
-	{"info",    cmd_info, "display uart2wifi status",           ""},
-	{"cfg",     cmd_cfg,  "program uart2wifi configuration",  
-	    "-d <device> -b <baud> -m<type>(0:PPP client, 1:server),"
-	    "\t    -u <username> -p <password> -c (clear)"},
-	{"on",      cmd_on,   "active uart device PPP active",                 ""},
-	{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
-	//{"xmt",     cmd_xmt,  "sent out command message",           "\"message string\""},
-	{"os",      cmd_os,   "display OS infomation",              ""},
+	{"sys",     cmd_sys, "display system information and status",           ""},
+	//{"cfg",     cmd_cfg,  "program uart2wifi configuration",  
+	//    "-d <device> -b <baud> -m<type>(0:PPP client, 1:server),"
+	//    "\t    -u <username> -p <password> -c (clear)"},
+	//{"on",      cmd_on,   "active uart device PPP active",                 ""},
+	//{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
+	{"ppp",     cmd_ppp,  "PPP control commands",           ""},
+//	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
 	{"duk",     cmd_duk,  "Javascript script interpreter",      
@@ -49,6 +49,7 @@ struct cmd_tbl commands[]=
 	{"cat",     cmd_cat,    "concate 2 files, only one argument, show the file content",
 	    "[-o overwrite] <dest file> [< surce file>]"},
 	{"http",    cmd_http,   "http_parser test command",         ""},
+//	{"camera",  cmd_camera, "GP camera control",         ""},
 	{NULL,        NULL}
 };
 
@@ -101,7 +102,7 @@ void cmd_ver(int argc, char* argv[])
 //      argc:   1
 //      argv:   none
 //
-void cmd_os(int argc, char* argv[])
+/*void cmd_os(int argc, char* argv[])
 {
     char *buf = malloc(0x4000);
     if (buf)
@@ -114,4 +115,4 @@ void cmd_os(int argc, char* argv[])
         printf("%s",buf);        
         free(buf);
     }
-}
+}*/

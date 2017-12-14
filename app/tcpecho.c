@@ -216,7 +216,7 @@ void cmd_echo(int argc, char* argv[])
 			printf("echo_client is working\n");
 			goto end_cmd_echo;
 		}
-		if (xTaskCreate( tcpecho_client_handler, "TcpEchoClient", configMINIMAL_STACK_SIZE, 
+		if (xTaskCreate( tcpecho_client_handler, "echo_client", configMINIMAL_STACK_SIZE, 
 			(void *)message, tskIDLE_PRIORITY + 1, &hTcpEchoClientTask )==pdPASS)
 			echo_client_on =1;
 		else
@@ -233,7 +233,7 @@ end_cmd_echo:
 //
 int tcpecho_server_init(void)
 {
-	if (xTaskCreate( tcpecho_server_handler, "TcpEchoServer", configMINIMAL_STACK_SIZE, 
+	if (xTaskCreate( tcpecho_server_handler, "echo_server", configMINIMAL_STACK_SIZE, 
 		(void *)NULL, tskIDLE_PRIORITY + 1, &hTcpEchoServerTask )==pdPASS)
 		printf("initial TCP echo server %d\n",ECHO_PORT);
 	else

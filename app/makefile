@@ -10,7 +10,7 @@ INCS = -I./duktape -I./http-parser -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeR
 	-I../lwip/src/include -I../shell -I../include
 VPATH = .:./duktape:./http-parser:./http-parser/contrib
 SRCS = app.c tcpecho.c ping.c  cmdnet.c cmdduktape.c duktape.c cmdfs.c http_parser.c url_parser.c \
-	parsertrace.c http_test.c tftps.c https.c
+	parsertrace.c http_test.c tftps.c https.c pppd.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 .PHONY: clean depend

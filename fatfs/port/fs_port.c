@@ -351,7 +351,7 @@ void fs_init()
         goto end_fs_init;
     }
     // create a filesystem thread
-   	xTaskCreate( do_fs, "fs", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &hFsTask );
+   	xTaskCreate( do_fs, "file_system", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &hFsTask );
 end_fs_init:
     return;
 }
