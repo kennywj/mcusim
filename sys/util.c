@@ -16,6 +16,8 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include "shell.h"
+#include "sys.h"
+
 //
 // utility of queue
 //
@@ -45,10 +47,10 @@ int queue_init(struct _queue_ *q, int size)
 		q->size = size;
 		q->put=q->get=q->full=0;
 		//q->sem = xSemaphoreCreateMutex();
-		return SYS_OK;
+		return QUEUE_OK;
 	}
 	else
-		return SYS_NOMEM;
+		return QUEUE_NOMEM_ERR;
 }
 
 //
@@ -89,17 +91,17 @@ int queue_put(struct _queue_ *q, char *data, int size)
 	int i;
 	
 	if (!q || !q->buf)
-		return SYS_NOT_AVAILABLE;
+		return QUEUE_NOTAVAIL_ERR;
 		
 	//if (xSemaphoreTake( q->sem, ( TickType_t ) 10 ) != pdTRUE)
-	//	return TRI_ERR_SEM_TAKE;
+	//	return QUEUE_COLLI_ERR;
 		
 	for(i=0;i<size;i++)
 	{
 		if (q->full)
 		{	
-			p2p_log_msg( "%s full\n",__FUNCTION__);	// output debug message
-			return SYS_QUEUE_FULL;
+			printf( "%s full\n",__FUNCTION__);	// output debug message
+			return QUEUE_COLLI_ERR;
 		}
 		q->buf[q->put++]=data[i];
 		if (q->put>=q->size)
@@ -110,6 +112,7 @@ int queue_put(struct _queue_ *q, char *data, int size)
 	//xSemaphoreGive( q->sem );
 	return i;	
 }
+
 
 //
 //  function: queue_get
@@ -127,10 +130,10 @@ int queue_get(struct _queue_ *q,char *buf, int bufsize)
 	int i;
 	
 	if (!q || !q->buf)
-		return SYS_NOT_AVAILABLE;
+		return QUEUE_NOTAVAIL_ERR;
 		
 	//if (xSemaphoreTake( q->sem, ( TickType_t ) 10 ) != pdTRUE)
-	//	return TRI_ERR_SEM_TAKE;
+	//	return QUEUE_COLLI_ERR;
 		
 	for(i=0;i<bufsize;i++)
 	{
@@ -161,10 +164,10 @@ int queue_peek(struct _queue_ *q,char *buf, int bufsize)
 	int i;
 
 	if (!q || !q->buf)
-		return SYS_NOT_AVAILABLE;
+		return QUEUE_NOTAVAIL_ERR;
 
 	//if (xSemaphoreTake( q->sem, ( TickType_t ) 10 ) != pdTRUE)
-	//	return TRI_ERR_SEM_TAKE;
+	//	return QUEUE_COLLI_ERR;
 
 	int get = q->get;
 	int full = q->full;
@@ -197,10 +200,10 @@ int queue_peek(struct _queue_ *q,char *buf, int bufsize)
 int queue_move(struct _queue_ *q, int n)
 {
 	if (!q || !q->buf)
-		return SYS_NOT_AVAILABLE;
+		return QUEUE_NOTAVAIL_ERR;
 
 	//if (xSemaphoreTake( q->sem, ( TickType_t ) 10 ) != pdTRUE)
-	//	return TRI_ERR_SEM_TAKE;
+	//	return QUEUE_COLLI_ERR;
 
 	int data_size = 0;
 	int ret = 0;
@@ -277,10 +280,10 @@ int queue_space(struct _queue_ *q)
 int queue_reset(struct _queue_ *q)
 {
     if (!q || !q->buf)
-	    return SYS_NOT_AVAILABLE;
+	    return QUEUE_NOTAVAIL_ERR;
 	    
 	//if (xSemaphoreTake( q->sem, ( TickType_t ) 10 ) != pdTRUE)
-	//	return TRI_ERR_SEM_TAKE;
+	//	return QUEUE_COLLI_ERR;
 		
 	q->put=q->get=q->full=0;	
 	

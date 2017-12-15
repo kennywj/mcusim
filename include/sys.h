@@ -3,7 +3,7 @@
 //
 #ifndef __SYS_H__
 #define __SYS_H__
-
+#include "qu.h"
 #define MAX_PKT_SIZE    1520
 #define DEVICE_NAME_LEN 64
 #define MAX_BAUD_NUM    5

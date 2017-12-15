@@ -49,7 +49,8 @@ struct cmd_tbl commands[]=
 	{"cat",     cmd_cat,    "concate 2 files, only one argument, show the file content",
 	    "[-o overwrite] <dest file> [< surce file>]"},
 	{"http",    cmd_http,   "http_parser test command",         ""},
-//	{"camera",  cmd_camera, "GP camera control",         ""},
+	{"camera",  cmd_camera, "GP camera control",         
+		"-d <device> -b <baudrate> -x<camera command string> [on|off|getpic]"},
 	{NULL,        NULL}
 };
 

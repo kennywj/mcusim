@@ -48,6 +48,7 @@
 #include "sys.h"
 #include "cmd.h"
 
+#include "fs_port.h"
 #include "AsyncIO/AsyncIO.h"
 #include "AsyncIO/AsyncIOSerial.h"
 
@@ -82,15 +83,17 @@ int _inbyte(int msec)
         if (msec <= 0)
 			return -1;
     }
+    printf("%s:%c(%x) ",__FUNCTION__, ch, ch);
     return ch;
 }
 
 //
 // output character to uart
 //
-void _outbyte(unsigned char c)
+void _outbyte(unsigned char ch)
 {
-    write(iSerialReceive, &c, 1); // include crc
+	printf("%s:%c(%x) ",__FUNCTION__, ch, ch);
+    write(iSerialReceive, &ch, 1); // include crc
 }
 
 
@@ -121,7 +124,7 @@ static void flushinput(void)
 		;
 }
 
-int xmodemReceive(unsigned char *dest, int destsz)
+int xmodemReceive(int fd, int destsz)
 {
 	unsigned char xbuff[1030]; /* 1024 for XModem 1k + 3 head chars + 2 crc + nul */
 	unsigned char *p;
@@ -182,7 +185,12 @@ int xmodemReceive(unsigned char *dest, int destsz)
 				register int count = destsz - len;
 				if (count > bufsz) count = bufsz;
 				if (count > 0) {
-					memcpy (&dest[len], &xbuff[3], count);
+					if (fs_write(fd, &xbuff[3], count)!=count)
+					{
+						printf("write error\n");
+						goto reject;
+					}
+					//memcpy (&dest[len], &xbuff[3], count);
 					len += count;
 				}
 				++packetno;
@@ -204,7 +212,7 @@ int xmodemReceive(unsigned char *dest, int destsz)
 	}
 }
 
-int xmodemTransmit(unsigned char *src, int srcsz)
+int xmodemTransmit(int fd, int srcsz)
 {
 	unsigned char xbuff[1030]; /* 1024 for XModem 1k + 3 head chars + 2 crc + nul */
 	int bufsz, crc = -1;
@@ -253,7 +261,14 @@ int xmodemTransmit(unsigned char *src, int srcsz)
 					xbuff[3] = CTRLZ;
 				}
 				else {
-					memcpy (&xbuff[3], &src[len], c);
+					if (fs_read(fd, &xbuff[3], c) != c)
+					{
+						printf("read error\n");
+						_outbyte(NAK);
+						flushinput();
+						return -5; /* canceled by remote */
+					}
+					//memcpy (&xbuff[3], &src[len], c);
 					if (c < bufsz) xbuff[3+c] = CTRLZ;
 				}
 				if (crc) {
@@ -315,11 +330,11 @@ int xmodemTransmit(unsigned char *src, int srcsz)
 //
 void cmd_xmodem(int argc, char* argv[])
 {
-    int i,c, ret=0, op=-1;
-    char *tbuf=NULL;
-    static unsigned int addr=0, len=0x10000;
+    int i,c, ret=0, op=-1, fd=-1;
+    static char filename[65]="temp";
+    FILINFO stat;
     
-    while ((c = getopt (argc, argv, "d:b:a:l:rw?")) != -1)
+    while ((c = getopt (argc, argv, "d:b:f:rwh?")) != -1)
     {
 	    switch (c) {
 		case 'd':
@@ -342,23 +357,22 @@ void cmd_xmodem(int argc, char* argv[])
 	    case 'w':
 	        op = 1;
 	    break;
-	    case 'a':
-	        addr = atoi(optarg);
-	    break;
-	    case 'l':
-	        len = atoi(optarg);
+	    case 'f':
+	        strncpy(filename,optarg,64);
 	    break;
 	    case '?':
+	    case 'h':
 	    default:
-	        printf("usage: -r(read data from console) | -w (write data to console)>\n");
+	        printf("usage: -r(read data from console) | -w (write data to console) -f<file>\n"
+				"-d <device name> -b <baudrate>\n");
 	        goto end_xmodem;
 	    }
     }   // end of while
     
     if (op == -1)
     {
-        printf("Xmodem setting: device %s, baud %s, mode=%s, addr=%p, size = %d\n",
-			devname, baudstr[baudid], (op?"read":"write"),addr, len);
+        printf("Xmodem setting: device %s, baud %s, mode=%s, file=%s\n",
+			devname, baudstr[baudid], (op?"read":"write"), filename);
         goto end_xmodem;
     }
     
@@ -367,16 +381,14 @@ void cmd_xmodem(int argc, char* argv[])
         printf("serial port inuse\n");
         goto end_xmodem;
     }
-    
-    if (op==0)
+    // open file for read/write
+    fd = fs_open(filename, op ? FA_READ : (FA_CREATE_NEW| FA_WRITE)); 
+    if (fd < 0) 
     {
-        tbuf = malloc(len+128); // avoid boudary block need extra one
-        if (!tbuf)
-        {
-            printf("heap not enough, require=%d\n",len);    
-            goto end_xmodem;
-        } 
-    } 
+		printf("xmodem: fopen()");
+		goto end_xmodem;
+    }
+    
     // open uart device
     if ( pdTRUE == lAsyncIOSerialOpen( devname, &iSerialReceive,  baudrate[baudid]) )
     {
@@ -389,35 +401,26 @@ void cmd_xmodem(int argc, char* argv[])
         
         if (op==0)
         {    
-            ret = xmodemReceive((unsigned char *)tbuf, len);
-            if (ret < 0) {
+            ret = xmodemReceive(fd, 0x100000);	// restrict max size 1MB
+            if (ret < 0)
 		        printf("Xmodem receive error: status: %d\n", ret);
-	        }
 	        else  
-	        {
-   		        dump_frame(tbuf,ret,"receive data\n");
 		        printf("Xmodem successfully received data len=%d bytes\n", ret);
-	        }
         }
         else if (op==1)
         {
-            if (xmodem_on)
-            {
-                printf("serial port inuse\n");
-                goto end_xmodem;
-            }
-        
-            if (len)
-            {   
-                ret = xmodemTransmit((unsigned char *)addr, len);
-    	        if (ret < 0)
-	    	        printf("Xmodem transmit error: status: %d\n", ret);
-	            else  
-		            printf("Xmodem successfully transmitted from %p len=%d bytes\n", addr, ret);
-		    }
-		    else
-		        printf("Xmodem transmit error: no length\n");
-        }  
+			// get file size
+			if (fs_stat(filename,&stat)==FR_OK)
+			{
+				ret = xmodemTransmit(fd, stat.fsize);
+				if (ret < 0)
+					printf("Xmodem transmit error: status: %d\n", ret);
+				else  
+					printf("Xmodem successfully transmitted %d bytes\n", ret);
+			}
+			else
+				printf("get file size error\n");
+		}  
         // close device
         lAsyncIOSerialClose(iSerialReceive);
         iSerialReceive = 0;
@@ -425,8 +428,8 @@ void cmd_xmodem(int argc, char* argv[])
         xmodem_on = 0;
     }   
 end_xmodem:	
-     if (tbuf)
-        free(tbuf);
+    if (fd>0)
+		fs_close(fd);
     return;
 }
 

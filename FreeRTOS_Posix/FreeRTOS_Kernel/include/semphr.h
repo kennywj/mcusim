@@ -112,7 +112,8 @@ typedef xQueueHandle xSemaphoreHandle;
 															xSemaphoreGive( xSemaphore );															\
 														}																							\
 													}
-
+// add by kenny 
+#define xSemaphoreCreateBinary() xQueueCreate( ( unsigned portBASE_TYPE ) 1, semSEMAPHORE_QUEUE_ITEM_LENGTH )
 /**
  * semphr. h
  * <pre>xSemaphoreTake( 
@@ -488,7 +489,7 @@ typedef xQueueHandle xSemaphoreHandle;
     for( ;; )
     {
         // We want this task to run every 10 ticks of a timer.  The semaphore 
-        // was created before this task was started.
+        // was created before this task was stahttps://www.freertos.org/a00113.html#vSemaphoreDeleterted.
 
         // Block waiting for the semaphore to become available.
         if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE )
@@ -705,6 +706,8 @@ typedef xQueueHandle xSemaphoreHandle;
  */
 #define xSemaphoreCreateCounting( uxMaxCount, uxInitialCount ) xQueueCreateCountingSemaphore( uxMaxCount, uxInitialCount )
 
+// add by kenny, ref. to other freertos source
+#define vSemaphoreDelete( xSemaphore )	vQueueDelete(xSemaphore)
 
 #endif /* SEMAPHORE_H */
 
