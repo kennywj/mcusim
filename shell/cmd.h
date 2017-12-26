@@ -42,6 +42,7 @@ extern void cmd_echo(int argc, char* argv[]);
 extern void cmd_http(int argc, char* argv[]);
 extern void cmd_camera(int argc, char* argv[]);
 extern void cmd_ppp(int argc, char* argv[]);
+extern void cmd_esp(int argc, char* argv[]);
 
 extern void dump_frame(char *frame, int len, const char * fmt, ...);
 #endif

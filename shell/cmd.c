@@ -24,6 +24,8 @@ struct cmd_tbl commands[]=
 	//{"on",      cmd_on,   "active uart device PPP active",                 ""},
 	//{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
 	{"ppp",     cmd_ppp,  "PPP control commands",           ""},
+	{"esp",		cmd_esp,	"ESP8266 wifi to uart brigde module contol command",
+		"on/off (turn on/off esp8266)"},
 //	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},
@@ -51,6 +53,7 @@ struct cmd_tbl commands[]=
 	{"http",    cmd_http,   "http_parser test command",         ""},
 	{"camera",  cmd_camera, "GP camera control",         
 		"-d <device> -b <baudrate> -x<camera command string> [on|off|getpic]"},
+
 	{NULL,        NULL}
 };
 
