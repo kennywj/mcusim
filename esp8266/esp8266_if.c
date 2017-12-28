@@ -58,6 +58,9 @@
 #include "esp8266_if.h"
 #include "comm.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 #define HSUART_CH_NETWORK	1
 #define COMMAND_DELAY		100 //ms
@@ -266,8 +269,10 @@ void tsk_network_mngr(void * pvParameters)
 {
 	int wait_dhcp_cnt = 0;
 	extern int esp8266_exit;
-	
+	extern xSemaphoreHandle esp8266_sem;
+	printf("%s start\n",__FUNCTION__);
 	vTaskDelay(2000); //wait for esp8266 boot up
+	printf("delay 2 seconds\n");
 	while (1) {
 		if (esp8266_exit)
 			break;
@@ -283,6 +288,8 @@ void tsk_network_mngr(void * pvParameters)
 			wait_dhcp_cnt--;
 	}
 	// end rx task
+	printf("end %s\n",__FUNCTION__);
+	xSemaphoreGive(esp8266_sem);
 	vTaskDelete( NULL );
 }
 

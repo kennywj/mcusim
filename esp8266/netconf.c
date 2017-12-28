@@ -46,6 +46,7 @@
 #include "lwip/tcpip.h"
 #include "lwip/ip_addr.h"
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include "netconf.h"
 #include "esp8266_if.h"
@@ -55,7 +56,9 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 #include "queue.h"
+
 #include "sys.h"
 #include "cmd.h"
 
@@ -88,7 +91,7 @@ static char devname[DEVICE_NAME_LEN+1]="/dev/ttyUSB0";
 static int iSerialReceive = 0;
 static xTaskHandle hSerialTask;
 static int baudid=3;	// default 115200
-static xSemaphoreHandle esp8266_sem =	NULL;
+xSemaphoreHandle esp8266_sem =	NULL;
 
 
 
@@ -255,10 +258,11 @@ int esp8266_output(unsigned char *buf, unsigned int len)
 //
 int esp8266_input()
 {
-	unsigned char ch;
+	int ch;
+	printf("enter %s, queue = %p \n",__FUNCTION__, xSerialRxQueue);
 	while (1) {
         // repeat read data and use timeout to exit
-        if ( pdFALSE == xQueueReceive( xSerialRxQueue, &ch, 20 ) )  // wait more the 10ms, expired
+        if ( pdFALSE == xQueueReceive( xSerialRxQueue, (unsigned char *)&ch, 20 ) )  // wait more the 10ms, expired
         {
             if (esp8266_exit)
             {
@@ -270,7 +274,8 @@ int esp8266_input()
         }
         break;
     }
-    return (int)ch;
+    printf("exit %s %x\n",__FUNCTION__, ch);
+    return ch;
 }
 
 //
@@ -288,10 +293,12 @@ int esp8266_control(int action)
 		printf("wait esp8266 terminate ...\n");
 		if (xSemaphoreTake(esp8266_sem, 30000)!= pdTRUE)	
 			printf("wait esp8266 terminate fail\n");
-		printf("Close %s!",devname);
+		netif_remove(&xnetif);
 		lAsyncIOSerialClose(iSerialReceive);
         iSerialReceive = 0;
         vQueueDelete(xSerialRxQueue);
+        printf("Close %s!\n",devname);
+        esp8266_exit = 0;
         esp8266_on = 0;
         return 0;
 	}
@@ -314,7 +321,7 @@ int esp8266_control(int action)
 			xSerialRxQueue = xQueueCreate( MAX_PKT_SIZE*2, sizeof ( unsigned char ) );
 			(void)lAsyncIORegisterCallback( iSerialReceive, vAsyncSerialIODataAvailableISR,
                                         xSerialRxQueue );
-			printf("Open device %s success\n",devname);
+			printf("Open device %s success queue = %p\n",devname, xSerialRxQueue);
 			esp8266_netinit(1);                  
 			esp8266_on = 1;
 		}
@@ -335,18 +342,61 @@ int esp8266_control(int action)
 //
 void cmd_esp(int argc, char* argv[])
 {
-	for(;optind<argc;optind++)
-	{
-		if (strcmp(argv[optind],"on")==0)
-			esp8266_control(1);
-		else if (strcmp(argv[optind],"off")==0)
-			esp8266_control(0);
-		else
-		{
+	int c;
+    int i;
+    
+     while((c=getopt(argc, argv, "d:b:m:ch?")) != -1)
+    {
+        switch(c)
+        {
+        case 'd':
+            strncpy(devname, optarg, DEVICE_NAME_LEN);
+            printf("set device %s\n",devname);
+            break;
+        case 'b':
+            for(i=0; i<MAX_BAUD_NUM; i++)
+            {
+                if (strcmp(optarg,baudstr[i])==0)
+                {
+                    baudid = i;
+                    printf("set baudrate %s\n",baudstr[baudid]);
+                    break;
+                }
+            }
+            break;
+        case 'c':
+            printf("clear counters\n");
+            break;
+        case 'h':
+        case '?':
 			printf("%s",curr_cmd->usage);
 			break;
+        default:
+            printf("wrong command!\n usgae: %s\n",curr_cmd->usage);
+            printf("%s",curr_cmd->usage);
+            return;
+        }
+    }   // end while
+    
+    if (optind<argc)
+    {
+		for(;optind<argc;optind++)
+		{
+			if (strcmp(argv[optind],"on")==0)
+				esp8266_control(1);
+			else if (strcmp(argv[optind],"off")==0)
+				esp8266_control(0);
+			else
+			{
+				printf("%s",curr_cmd->usage);
+				break;
+			}
 		}
 	}
+	else
+		printf("esp8266 module %s, device %s, baudrate %s\n",
+			(esp8266_on?"on":"off"),devname, baudstr[baudid]);
+
 }
 
 /*********** Portions COPYRIGHT 2012 Embest Tech. Co., Ltd.*****END OF FILE****/

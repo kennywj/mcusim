@@ -25,7 +25,7 @@ struct cmd_tbl commands[]=
 	//{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
 	{"ppp",     cmd_ppp,  "PPP control commands",           ""},
 	{"esp",		cmd_esp,	"ESP8266 wifi to uart brigde module contol command",
-		"on/off (turn on/off esp8266)"},
+		"-d<device> -b<baudrate> -c<clear> -h<help> [on|off] (turn on/off esp8266)"},
 //	{"os",      cmd_os,   "display OS infomation",              ""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
 	{"ping",    cmd_ping, "Send ECHO request to destination",   "<ip address> [-t<repeat>]"},

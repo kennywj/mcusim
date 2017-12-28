@@ -50,7 +50,7 @@ xAsyncIOCallback *pxIterator;
 		pxIterator->pxNext->iFileHandle = iFileDescriptor;
 		pxIterator->pxNext->pvFunction = pvFunction;
 		pxIterator->pxNext->pvContext = pvContext;
-
+		pxIterator->pxNext->pxNext = NULL;
 		/* Set the socket as requiring a signal when messages are received. */
 		prvRegisterSignalHandler( iFileDescriptor );
 	}

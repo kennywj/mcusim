@@ -237,6 +237,7 @@ void tsk_uart_reader(void * pvParameters)
 			packet_buf_index = 0;
 		}
 	}
+	printf("end %s\n",__FUNCTION__);
 	// end rx task
 	vTaskDelete( NULL );
 }
