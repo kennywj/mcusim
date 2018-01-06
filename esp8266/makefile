@@ -6,7 +6,8 @@
 ODIR = ../build
 LIB = $(ODIR)/libesp8266.a
 INCS = -I./ -I../include -I../FreeRTOS_Posix  -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../lwip/src/include -I../shell -I../port -I../port/freertos
+	-I../lwip/src/include -I../shell -I../port -I../port/freertos \
+	-I../mbedtls-2.6.0/include/mbedtls
 VPATH = ./
 SRCS = cobs.c comm.c crc16.c esp8266_if.c netconf.c
 

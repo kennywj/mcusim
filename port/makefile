@@ -6,10 +6,10 @@
 ODIR = ../build
 LIB = $(ODIR)/liblwip.a
 INCS =  -I./ -I./arch -I./freertos -I../lwip/src/include -I../include	-I../FreeRTOS_Posix \
-	-I../FreeRTOS_Posix/FreeRTOS_Kernel/include
+	-I../FreeRTOS_Posix/FreeRTOS_Kernel/include -I../mbedtls-2.6.0/include/mbedtls
 
 VPATH = .:./freertos:../lwip/src/api:../lwip/src/apps:../lwip/src/core:../lwip/src/core/ipv4:../lwip/src/core/ipv6	\
-	:../lwip/src/netif:../lwip/src/netif/ppp:../lwip/src/netif/ppp/polarssl
+	:../lwip/src/netif:../lwip/src/netif/ppp
 	
 SRCS = ethernetif.c network.c sys_arch.c \
 	ethernet.c lowpan6.c slipif.c	\
@@ -20,8 +20,8 @@ SRCS = ethernetif.c network.c sys_arch.c \
 	dhcp6.c ethip6.c icmp6.c inet6.c nd6.c ip6.c ip6_addr.c ip6_frag.c mld6.c	\
 	auth.c ccp.c chap_ms.c chap-md5.c chap-new.c demand.c eap.c ecp.c eui64.c 	\
 	fsm.c ipcp.c ipv6cp.c lcp.c magic.c mppe.c multilink.c ppp.c pppapi.c pppcrypt.c 	\
-	pppoe.c pppol2tp.c pppos.c upap.c utils.c vj.c	\
-	arc4.c des.c md4.c md5.c sha1.c
+	pppoe.c pppol2tp.c pppos.c upap.c utils.c vj.c
+	#arc4.c des.c md4.c md5.c sha1.c
 	
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 
