@@ -21,6 +21,7 @@
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
+#error "use default config"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -63,7 +64,11 @@
 #include <stdlib.h>
 #define mbedtls_printf     printf
 #define mbedtls_snprintf   snprintf
+#ifdef U2W_SIM
+#define mbedtls_exit(e)		printf("error %d\n",e); return
+#else
 #define mbedtls_exit       exit
+#endif
 #define MBEDTLS_EXIT_SUCCESS EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE EXIT_FAILURE
 #endif
@@ -71,7 +76,7 @@
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
 #include "mbedtls/memory_buffer_alloc.h"
 #endif
-
+MBEDTLS_ECP_C
 static int test_snprintf( size_t n, const char ref_buf[10], int ref_ret )
 {
     int ret;
@@ -136,7 +141,11 @@ static void create_entropy_seed_file( void )
 }
 #endif
 
+#ifdef U2W_SIM
+void cmd_selftest(int argc, char* argv[])
+#else
 int main( int argc, char *argv[] )
+#endif
 {
     int v, suites_tested = 0, suites_failed = 0;
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && defined(MBEDTLS_SELF_TEST)
@@ -396,7 +405,6 @@ int main( int argc, char *argv[] )
 #endif
 
 /* Slow tests last */
-
 #if defined(MBEDTLS_TIMING_C)
     if( mbedtls_timing_self_test( v ) != 0 )
     {
@@ -442,11 +450,13 @@ int main( int argc, char *argv[] )
         fflush( stdout ); getchar();
 #endif
     }
-
+    
     if( suites_failed > 0)
         mbedtls_exit( MBEDTLS_EXIT_FAILURE );
-
+#ifndef U2W_SIM
     /* return() is here to prevent compiler warnings */
+    printf("test");
     return( MBEDTLS_EXIT_SUCCESS );
+#endif
 }
 

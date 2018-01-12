@@ -53,7 +53,7 @@ struct cmd_tbl commands[]=
 	{"http",    cmd_http,   "http_parser test command",         ""},
 	{"camera",  cmd_camera, "GP camera control",         
 		"-d <device> -b <baudrate> -x<camera command string> [on|off|getpic]"},
-
+	{"selftest", cmd_selftest, "mbedtls selt test",""},
 	{NULL,        NULL}
 };
 
