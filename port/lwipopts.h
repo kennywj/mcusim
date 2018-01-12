@@ -455,7 +455,7 @@
 #define PAP_SUPPORT                     1
 #define CHAP_SUPPORT                    1
 #define PPP_SERVER                      1
-
+#define LWIP_USE_EXTERNAL_MBEDTLS		1
 extern unsigned char debug_flags;
 #define LWIP_DBG_TYPES_ON debug_flags
 
