@@ -6,10 +6,10 @@
 ODIR = ../../build
 LIB = $(ODIR)/libmbedtls.a
 INCS =  -I./ -I../include -I../include/mbedtls
-VPATH = ../library:../programs/test
+VPATH = ../library:../programs/test:../programs/ssl
 
 CFLAGS += -DU2W_SIM -DMBEDTLS_CONFIG_FILE='<u2w_config.h>'
-	
+
 SRCS = aes.c aesni.c arc4.c asn1parse.c asn1write.c base64.c bignum.c blowfish.c	\
 	camellia.c ccm.c certs.c cipher.c cipher_wrap.c	cmac.c	ctr_drbg.c debug.c	\
 	des.c dhm.c ecdh.c ecdsa.c ecjpake.c ecp.c ecp_curves.c entropy.c entropy_poll.c	\
@@ -19,7 +19,7 @@ SRCS = aes.c aesni.c arc4.c asn1parse.c asn1write.c base64.c bignum.c blowfish.c
 	ssl_cache.c ssl_ciphersuites.c ssl_cli.c ssl_cookie.c ssl_srv.c ssl_ticket.c	\
 	ssl_tls.c threading.c timing.c version.c version_features.c x509.c x509_create.c	\
 	x509_crl.c x509_crt.c x509_csr.c x509write_crt.c x509write_csr.c xtea.c	\
-	selftest.c
+	selftest.c ssl_client1.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 

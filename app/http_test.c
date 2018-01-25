@@ -4070,7 +4070,7 @@ test_message_connect (const struct message *msg)
 
 //int
 //main (void)
-void cmd_http(int argc, char* argv[])
+void cmd_http_parser(int argc, char* argv[])
 {
   parser = NULL;
   int i, j, k;

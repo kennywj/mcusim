@@ -158,6 +158,8 @@ void do_init(void *parm)
 	printf("### end init ###\n");
     vTaskDelete(NULL);
 }
+
+
 int main( void )
 {
 	xTaskHandle hSysTask;

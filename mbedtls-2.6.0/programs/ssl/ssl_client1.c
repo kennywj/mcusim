@@ -78,7 +78,11 @@ static void my_debug( void *ctx, int level,
     fflush(  (FILE *) ctx  );
 }
 
+#ifdef U2W_SIM
+void https_client(const char *server_url, unsigned short port)
+#else
 int main( void )
+#endif
 {
     int ret, len;
     mbedtls_net_context server_fd;

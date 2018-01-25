@@ -171,6 +171,8 @@ void do_fs(void *parm)
                 msg->res = f_open(fp, (const char*)msg->args[1], *(BYTE *)msg->args[2]);
                 if (msg->res ==FR_OK)
                 	msg->args[0] = (void *)fd;
+                else
+					free_fd(fd);
             break;
             case FS_CLOSE:
             	fd = (int)msg->args[0];
@@ -240,6 +242,8 @@ void do_fs(void *parm)
                 msg->res = f_opendir(dp, (const char*)msg->args[1]);
                 if (msg->res ==FR_OK)
                		msg->args[0] = (void *)dd;
+               	else
+					free_dd(dd);
             break;
             case FS_CLOSEDIR:
             	dd = (int)msg->args[0];
@@ -378,6 +382,8 @@ int fs_open (const char* path, BYTE mode)
             {	
                 if (msg->res == FR_OK)
                 	res =  (int)msg->args[0];
+                else
+					res = msg->res;
             }
             else
                 res = -FR_NOT_READY;
@@ -613,6 +619,8 @@ int fs_opendir (const char* path)
             {	
                 if (msg->res == FR_OK)
                 	res = (int) msg->args[0];
+                else
+					res = msg->res;
             }
             else
                 res = -FR_NOT_READY;
