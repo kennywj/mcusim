@@ -1,4 +1,4 @@
-[submodule "FreeRTOS_Posix/lwip"]
+[submodule "lwip"]
 	path = lwip
 	url = https://git.savannah.nongnu.org/git/lwip.git
 [submodule "app/http-parser"]
