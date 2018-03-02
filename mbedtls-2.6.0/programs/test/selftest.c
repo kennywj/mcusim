@@ -76,7 +76,7 @@
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
 #include "mbedtls/memory_buffer_alloc.h"
 #endif
-MBEDTLS_ECP_C
+
 static int test_snprintf( size_t n, const char ref_buf[10], int ref_ret )
 {
     int ret;

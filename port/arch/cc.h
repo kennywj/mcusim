@@ -49,5 +49,9 @@ typedef uintptr_t          mem_ptr_t;
 
 #endif
 
+#if LWIP_USE_EXTERNAL_MBEDTLS
+#include "md5.h"
+#endif
+
 #endif
 //__CC_H__

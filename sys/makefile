@@ -6,7 +6,7 @@
 ODIR = ../build
 LIB = $(ODIR)/libsys.a
 INCS = -I./duktape -I../include -I../FreeRTOS_Posix  -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../lwip/src/include -I../shell -I../port -I../port/freertos
+	-I../mbedtls-2.6.0/include/mbedtls -I../lwip/src/include -I../shell -I../port -I../port/freertos
 VPATH = ./
 SRCS = sys.c util.c
 
