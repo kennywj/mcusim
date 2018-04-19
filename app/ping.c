@@ -238,8 +238,9 @@ void cmd_ping(int argc, char* argv[])
             repeat_time = atoi(optarg);
             break;
         default:
-            printf("wrong command!\n usgae: %s\n",curr_cmd->usage);
-            return;
+            //printf("wrong command!\n usgae: %s\n",curr_cmd->usage);
+            //return;
+            break;
         }
     }   // end while
     if (optind < argc  && hPingTask==NULL)
