@@ -57,6 +57,7 @@ struct cmd_tbl commands[]=
 		"-d <device> -b <baudrate> -x<camera command string> [on|off|getpic]"},
 	{"selftest", cmd_selftest, "mbedtls selt test",""},
 	{"longopt", cmd_long_options, "do long option test",""},
+	{"md5", cmd_md5, "do md5 calculate","md5 <file>"},
 	{NULL,        NULL}
 };
 
@@ -216,3 +217,4 @@ cmd_long_options (int argc, char *argv[])
       putchar ('\n');
     }
 }
+

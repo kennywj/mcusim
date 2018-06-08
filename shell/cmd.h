@@ -46,6 +46,7 @@ extern void cmd_ppp(int argc, char* argv[]);
 extern void cmd_esp(int argc, char* argv[]);
 extern void cmd_selftest(int argc, char* argv[]);
 extern void cmd_long_options(int argc, char* argv[]);
+extern void cmd_md5(int argc, char* argv[]);
 
 extern void dump_frame(char *frame, int len, const char * fmt, ...);
 #endif
