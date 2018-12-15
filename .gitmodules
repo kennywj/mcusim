@@ -4,3 +4,6 @@
 [submodule "app/http-parser"]
 	path = app/http-parser
 	url = https://github.com/nodejs/http-parser.git
+[submodule "coremark"]
+	path = coremark
+	url = https://github.com/eembc/coremark.git
