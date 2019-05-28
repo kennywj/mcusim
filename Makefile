@@ -5,10 +5,10 @@
 #
 PROG = ./u2w
 
-LIB_PATH := -L./build
+LIB_PATH := -L./build 
 INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel/include	\
 	-I./port -I./FreeRTOS_Posix/Common_Demo/include/
-#	
+#
 # p.s the link order of library has depenendce, not change
 #
 LIBS = -lshell -lapp -lesp8266 -lsys -llwip -lmbedtls -lfreertos -lfatfs -lpthread -lm
@@ -17,7 +17,7 @@ CC = gcc
 LD = ld
 AR = ar
 
-CFLAGS := -Wall -g -Wno-pointer-sign
+CFLAGS := -Wall -g -Wno-pointer-sign -fPIC
 CFLAGS += -DDEBUG
 
 LDFLAGS :=
