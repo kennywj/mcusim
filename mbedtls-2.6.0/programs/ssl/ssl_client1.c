@@ -309,7 +309,11 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
+#ifdef U2W_SIM
+	return;
+#else
     return( ret );
+#endif
 }
 #endif /* MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_SSL_TLS_C &&
           MBEDTLS_SSL_CLI_C && MBEDTLS_NET_C && MBEDTLS_RSA_C &&
