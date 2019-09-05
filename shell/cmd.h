@@ -23,7 +23,7 @@ extern void cmd_ver(int argc, char* argv[]);
 //extern void cmd_on(int argc, char* argv[]);
 //extern void cmd_off(int argc, char* argv[]);
 //extern void cmd_xmt(int argc, char* argv[]);
-//extern void cmd_os(int argc, char* argv[]);
+extern void cmd_gnss(int argc, char* argv[]);
 extern void cmd_ping(int argc, char* argv[]);
 extern void cmd_duk(int argc, char* argv[]);
 extern void cmd_net(int argc, char* argv[]);
