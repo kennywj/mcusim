@@ -1,14 +1,10 @@
 #include <stdio.h>
 #include <string.h>
+#include "allystar.h"
+
 
 extern int send_out(char *buf, int len);
 
-typedef struct _conf_pkt_type_
-{
-    unsigned short int msg_id;
-    unsigned short int len;
-    unsigned char *payload;
-} ALLYSTART_MSG;
 
 unsigned short int allystar_checksum(unsigned char *data, int count)
 {
@@ -24,25 +20,43 @@ unsigned short int allystar_checksum(unsigned char *data, int count)
     return ((unsigned short int)sum2 << 8) | sum1;
 }
 
-static int allystar_send_out(ALLYSTART_MSG *pkt)
-{
-	unsigned char msg[256];
-    unsigned short int checksum;
-	
-	msg[0] = 0xF1;
-    msg[1] = 0xD9;
-    msg[2] = pkt->msg_id  & 0xFF;
-    msg[3] = (pkt->msg_id >> 8)  & 0xFF;
-    msg[4] = pkt->len  & 0xFF;
-    msg[5] = (pkt->len >> 8)  & 0xFF;
-    if (pkt->len)
-    {
-       memcpy(&msg[6], &pkt->payload[0], pkt->len);
-    }
-    checksum = allystar_checksum( &msg[2], 4+ pkt->len);
 
-    msg[5+pkt->len +1 ] = checksum & 0xFF;
-    msg[5+pkt->len +2 ] = (checksum >> 8) & 0xFF;
+int allystar_reset(unsigned char type)
+{
+	unsigned char msg[9]={0xf1, 0xd9, 0x06, 0x40, 0, 0, 0, 0};
+	unsigned char *start=&msg[2], *cp=&msg[4];
+	unsigned short checksum, len = 1;
+	int total;
 	
-    return send_out((char *)msg, 8+pkt->len);
+	*cp++ = len & 0xFF;			/*length low*/
+	*cp++ = (len>>8) & 0xFF;	/*length high*/
+	*cp++ = type;
+	checksum = allystar_checksum( start, (int)cp-(int)start);
+	*cp++ = checksum & 0xFF;
+	*cp++ = (checksum >> 8) & 0xFF;
+	total =  (int)cp-(int)msg;
+	dump_frame(msg, total, "Send reset, type=%d\n",type);
+	return send_out((char *)msg, total);
+}
+
+int allystar_sleep(unsigned int ms, unsigned char action)
+{
+	unsigned char msg[13]={0xf1, 0xd9, 0x06, 0x41, 0, 0, 0, 0, 0, 0, 0, 0};
+	unsigned char *start=&msg[2], *cp=&msg[4];
+	unsigned short checksum, len = 5;
+	int total;
+	
+	*cp++ = len & 0xFF;	/*length low*/
+	*cp++ = (len>>8) & 0xFF;	/*length high*/
+	*cp++ = ms & 0xFF;
+	*cp++ = (ms>>8) & 0xFF;
+	*cp++ = (ms>>16) & 0xFF;
+	*cp++ = (ms>>24) & 0xFF;
+	*cp++ = action;
+	checksum = allystar_checksum( start, (int)cp-(int)start);
+	*cp++ = checksum & 0xFF;
+	*cp++ = (checksum >> 8) & 0xFF;
+	total =  (int)cp-(int)msg;
+	dump_frame(msg, total, "Send sleep, time=%ums, action = %d\n",ms, action);
+	return send_out((char *)msg, total);
 }

@@ -435,14 +435,9 @@ void cmd_ppp(int argc, char* argv[])
     int i;
 
     if (argc==1)
-    {
-        printf("device %s, baudrate %s, %s\n",devname, baudstr[baudid], (ppp_on?"ON":"OFF"));
-        printf("PPP %s, username %s, password %s\n",(ppp_type?"server":"client"),PPP_User,PPP_Pass);
-        printf("PPP %s Tx %d(%dB), Rx %d(%dB)\n",(ppp_type?"server":"client"),
-			ppp_tx_pcnt, ppp_tx_bcnt, ppp_rx_pcnt, ppp_rx_bcnt);
-        return;
-    }
-    while((c=getopt(argc, argv, "d:b:m:u:p:c")) != -1)
+        goto ppp_help;
+    
+    while((c=getopt(argc, argv, "d:b:m:u:p:ch")) != -1)
     {
         switch(c)
         {
@@ -479,6 +474,12 @@ void cmd_ppp(int argc, char* argv[])
             break;
         default:
             printf("wrong command!\n usgae: %s\n",curr_cmd->usage);
+        case 'h':
+ppp_help:        
+        	printf("device %s, baudrate %s, PPP active %s\n",devname, baudstr[baudid], (ppp_on?"ON":"OFF"));
+        	printf("PPP %s, username %s, password %s\n",(ppp_type?"server":"client"),PPP_User,PPP_Pass);
+        	printf("PPP %s Tx %d(%dB), Rx %d(%dB)\n",(ppp_type?"server":"client"),
+			ppp_tx_pcnt, ppp_tx_bcnt, ppp_rx_pcnt, ppp_rx_bcnt);
             return;
         }
     }   // end while

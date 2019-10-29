@@ -24,8 +24,9 @@ struct cmd_tbl commands[]=
 	//    "\t    -u <username> -p <password> -c (clear)"},
 	//{"on",      cmd_on,   "active uart device PPP active",                 ""},
 	//{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
-	{"gnss",    cmd_gnss, "GNSS module control",           "[-d device name] [-b baudrate] <on|off>"},
-	{"ppp",     cmd_ppp,  "PPP control commands",           "[-u username][-p password][-d device name] [-b baudrate] <on|off>"},
+	{"gnss",    cmd_gnss, "GNSS module control",           "[-d device name] [-b baudrate] <on|off|reset <type>|sleep <time>"
+		},
+	{"ppp",     cmd_ppp,  "PPP control commands",           "[-u username][-p password][-d device name] [-b baudrate] [-m <0|1> (0:client, 1:server)] <on|off>"},
 	{"esp",		cmd_esp,	"ESP8266 wifi to uart brigde module contol command",
 		"-d<device> -b<baudrate> -c<clear> -h<help> [on|off] (turn on/off esp8266)"},
 //	{"os",      cmd_os,   "display OS infomation",              ""},

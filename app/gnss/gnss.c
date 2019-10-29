@@ -293,7 +293,7 @@ void cmd_gnss(int argc, char* argv[])
     int c;
     int i;
 
-    while((c=getopt(argc, argv, "d:b:")) != -1)
+    while((c=getopt(argc, argv, "d:b:r:s:")) != -1)
     {
         switch(c)
         {
@@ -324,6 +324,22 @@ void cmd_gnss(int argc, char* argv[])
 			gnss_control(1);
 		else if (strcmp(argv[optind],"off")==0)
 			gnss_control(0);
+		else if (strcmp(argv[optind],"reset")==0)
+		{
+			if (optind < argc)
+			{
+				i = atoi(argv[++optind]);
+				allystar_reset(i);
+			}
+		}
+		else if (strcmp(argv[optind],"sleep")==0)
+		{
+			if (optind < argc)
+			{
+				i = atoi(argv[++optind]);
+				allystar_sleep(i);
+			}
+		}
 	}
 	
 	if (gnss_status())
