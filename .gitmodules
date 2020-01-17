@@ -7,6 +7,6 @@
 [submodule "coremark"]
 	path = coremark
 	url = https://github.com/eembc/coremark.git
-[submodule "LibHTTP"]
-	path = app/libhttp
+[submodule "libhttp"]
+	path = libhttp
 	url = https://github.com/lammertb/libhttp.git

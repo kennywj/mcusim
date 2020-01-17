@@ -8,7 +8,7 @@ LIB = ../../build/libmbedtls.a
 INCS =  -I./ -I../include -I../include/mbedtls
 VPATH = ../library:../programs/test:../programs/ssl
 
-CFLAGS += -DU2W_SIM -DMBEDTLS_CONFIG_FILE='<u2w_config.h>'
+CFLAGS += -fPIC -DU2W_SIM -DMBEDTLS_CONFIG_FILE='<u2w_config.h>'
 
 SRCS = aes.c aesni.c arc4.c asn1parse.c asn1write.c base64.c bignum.c blowfish.c	\
 	camellia.c ccm.c certs.c cipher.c cipher_wrap.c	cmac.c	ctr_drbg.c debug.c	\
@@ -32,7 +32,7 @@ $(LIB): $(OBJS)
 	@echo "    Archive    $(notdir $@)"
 
 $(ODIR)/%.o: %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@  
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(LIB)
