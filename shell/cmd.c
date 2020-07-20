@@ -18,14 +18,11 @@ struct cmd_tbl commands[]=
 {
 	{"help",    cmd_help, "display all commands and help",      ""},
 	{"quit",    cmd_quit, "exit this program",                  ""},
-	{"sys",     cmd_sys, "display system information and status",           ""},
-	//{"cfg",     cmd_cfg,  "program uart2wifi configuration",  
-	//    "-d <device> -b <baud> -m<type>(0:PPP client, 1:server),"
-	//    "\t    -u <username> -p <password> -c (clear)"},
+	{"sys",     cmd_sys,  "display system information and status",""},
+	{"json",    cmd_json, "JSON parser test program",			""},  
 	//{"on",      cmd_on,   "active uart device PPP active",                 ""},
 	//{"off",     cmd_off,  "deactive uart device PPP deactive",               ""},
-	{"gnss",    cmd_gnss, "GNSS module control",           "[-d device name] [-b baudrate] <on|off|reset <type>|sleep <time>"
-		},
+	{"gnss",    cmd_gnss, "GNSS module control",           "[-d device name] [-b baudrate] <on|off|reset <type>|sleep <time>"},
 	{"ppp",     cmd_ppp,  "PPP control commands",           "[-u username][-p password][-d device name] [-b baudrate] [-m <0|1> (0:client, 1:server)] <on|off>"},
 	{"esp",		cmd_esp,	"ESP8266 wifi to uart brigde module contol command",
 		"-d<device> -b<baudrate> -c<clear> -h<help> [on|off] (turn on/off esp8266)"},

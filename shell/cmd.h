@@ -18,7 +18,7 @@ extern struct cmd_tbl *curr_cmd;
 extern void cmd_quit(int argc, char* argv[]);
 extern void cmd_help(int argc, char* argv[]);
 extern void cmd_sys(int argc, char* argv[]);
-//extern void cmd_cfg(int argc, char* argv[]);
+extern void cmd_json(int argc, char* argv[]);
 extern void cmd_ver(int argc, char* argv[]);
 //extern void cmd_on(int argc, char* argv[]);
 //extern void cmd_off(int argc, char* argv[]);
