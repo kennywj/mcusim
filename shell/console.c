@@ -208,7 +208,7 @@ void do_console(void *parm)
 {
     int ret,count=0,multi_keys=0;
     char cmdbuf[MAX_CMDLEN+1]={0},*cmd, ch;
-   
+    char str[256];
 
     // set stdin select, initial STDIN
     set_input_mode();
@@ -226,8 +226,8 @@ void do_console(void *parm)
         printf("registry rx callback fail\n");
         goto end_console;
     }
-    
-    printf(">");      // prompt
+    fs_getcwd(str, sizeof str /sizeof *str);
+    printf("%s>",str);      // prompt
     fflush(stdout);
     // process service protocol
     while (1)
@@ -258,7 +258,8 @@ void do_console(void *parm)
 			    memset(cmdbuf,0,MAX_CMDLEN);
 			    count=0;
 			    multi_keys=0;
-   			    printf(">");      // prompt
+				fs_getcwd(str, sizeof str /sizeof *str);
+   			    printf("%s>",str);      // prompt
 		    }
 		    else
 		    {    

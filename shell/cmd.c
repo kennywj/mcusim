@@ -64,12 +64,27 @@ struct cmd_tbl commands[]=
 void cmd_help(int argc, char* argv[])
 {
     struct cmd_tbl  *p = &commands[0];
-    
-    while(p && p->name!=NULL)
-    {
-        printf("%-10s -- %10s,\n\t    %s\n",p->name, p->desc, p->usage); 
-        p++;   
-    }
+    int count;
+	
+	if (argc >=2)
+	{
+		while(p && strcmp(argv[1],p->name)!=0)
+			p++;
+		if (p)
+			printf("%-10s -- %10s,\n\t    %s\n",p->name, p->desc, p->usage); 
+	}
+	else
+	{	
+		while(p && p->name!=NULL)
+		{
+			printf("%-10s",p->name); 
+			p++;   
+			count ++;
+			if ((count % 5)==0)
+				printf("\n");
+		}
+		printf("\n\nInput \"quit\" to exit program\n");
+	}
 }
 
 //
