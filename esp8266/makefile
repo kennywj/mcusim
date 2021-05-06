@@ -3,19 +3,25 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-ODIR = ../build
-LIB = $(ODIR)/libesp8266.a
+ODIR = ../build/esp8266
+LIB = ../build/libesp8266.a
 INCS = -I./ -I../include -I../FreeRTOS_Posix  -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../lwip/src/include -I../shell -I../port -I../port/freertos \
+	-I../lwip/src/include -I../shell -I../sys_port -I../sys_port/freertos \
 	-I../mbedtls-2.6.0/include/mbedtls
 VPATH = ./
 SRCS = cobs.c comm.c crc16.c esp8266_if.c netconf.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
-.PHONY: clean depend all
 
-all: $(LIB)
+.PHONY: directories clean depend all
 
+all: directories $(LIB)
+
+directories: $(ODIR)
+
+$(ODIR):
+	$(MKDIR_P) $(ODIR)
+	
 $(LIB): $(OBJS)
 	@$(AR) cr $@ $^
 	@echo "    Archive    $(notdir $@)"

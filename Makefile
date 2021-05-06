@@ -7,12 +7,13 @@ PROG = ./u2w
 
 LIB_PATH := -L./build
 INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel/include	\
-	-I./port -I./FreeRTOS_Posix/Common_Demo/include/
+	-I./sys_port -I./FreeRTOS_Posix/Common_Demo/include/
 #
 # p.s the link order of library has depenendce, not change
 #
 LIBS = -lshell -lapp -lesp8266 -lsys -llwip -lmbedtls -lfreertos -lfatfs -lpthread -lcoremark -lm
 
+MKDIR_P = mkdir -p
 CC = gcc
 LD = ld
 AR = ar
@@ -22,21 +23,20 @@ CFLAGS += -DDEBUG
 
 LDFLAGS :=
 
-export CC LD AR CFLAGS LDFLAGS
+export CC LD AR CFLAGS LDFLAGS MKDIR_P
 
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c, %.o, $(SRCS))
 
-SUBDIRS = app sys shell FreeRTOS_Posix fatfs port esp8266 mbedtls-2.6.0/port kilo coremark_port
+SUBDIRS = app sys shell FreeRTOS_Posix fatfs sys_port esp8266 mbedtls-2.6.0/port kilo coremark_port
 
-.PHONY: subdirs $(SUBDIRS) clean all
+.PHONY: subdirs $(SUBDIRS) clean all $(CLEANSUBDIRS)
 
 all: $(PROG)
 
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
-	@echo "    subdir $@"
 	$(MAKE) -C $@
 
 $(PROG): $(SRCS) subdirs

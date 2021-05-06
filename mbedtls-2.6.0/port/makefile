@@ -3,7 +3,7 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-ODIR = .
+ODIR = ../../build/mbedtls
 LIB = ../../build/libmbedtls.a
 INCS =  -I./ -I../include -I../include/mbedtls
 VPATH = ../library:../programs/test:../programs/ssl
@@ -23,10 +23,15 @@ SRCS = aes.c aesni.c arc4.c asn1parse.c asn1write.c base64.c bignum.c blowfish.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 
-.PHONY: clean depend
+.PHONY: directories clean depend
 
-all: $(LIB)
+all: directories $(LIB)
 
+directories: $(ODIR)
+
+$(ODIR):
+	$(MKDIR_P) $(ODIR)
+		
 $(LIB): $(OBJS)
 	@$(AR) cr $@ $^
 	@echo "    Archive    $(notdir $@)"
@@ -35,7 +40,7 @@ $(ODIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(LIB)
+	rm -f $(OBJS) $(LIB) *.bak
 
 depend: $(SRCS)
 	makedepend $(INCS) $<

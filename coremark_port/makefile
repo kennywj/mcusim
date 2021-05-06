@@ -3,8 +3,8 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-ODIR = ../build
-LIB = $(ODIR)/libcoremark.a
+ODIR = ../build/coremark
+LIB = ../build/libcoremark.a
 INCS =  -I./ -I../coremark -I../include	-I../FreeRTOS_Posix \
 	-I../FreeRTOS_Posix/FreeRTOS_Kernel/include 
 
@@ -18,10 +18,15 @@ SRCS = core_list_join.c core_main.c core_matrix.c core_state.c core_util.c core_
 	
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
 
-.PHONY: clean depend
+.PHONY: directories clean depend
 
-all: $(LIB)
+all: directories $(LIB)
 
+directories: $(ODIR)
+
+$(ODIR):
+	$(MKDIR_P) $(ODIR)
+	
 $(LIB): $(OBJS)
 	@$(AR) cr $@ $^
 	@echo "    Archive    $(notdir $@)"

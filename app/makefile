@@ -3,10 +3,10 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-ODIR = ../build
-LIB = $(ODIR)/libapp.a
+ODIR = ../build/app
+LIB = ../build/libapp.a
 INCS = -I./duktape -I./http-parser -I./gnss -I./json -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port -I../port -I../port/freertos	\
+	-I../FreeRTOS_Posix -I../sys_port -I../sys_port/freertos -I../fatfs/src -I../fatfs/port \
 	-I../mbedtls-2.6.0/include/mbedtls -I../lwip/src/include -I../shell -I../include
 VPATH = .:./duktape:./http-parser:./http-parser/contrib:./gnss:./json
 SRCS = app.c tcpecho.c ping.c  cmdnet.c cmdduktape.c duktape.c cmdfs.c http_parser.c url_parser.c \
@@ -14,10 +14,16 @@ SRCS = app.c tcpecho.c ping.c  cmdnet.c cmdduktape.c duktape.c cmdfs.c http_pars
 	tiny-json.c json-maker.c cmd_json.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
-.PHONY: clean depend
 
-all: $(LIB)
+.PHONY: directories clean depend
 
+all: directories $(LIB)
+
+directories: $(ODIR)
+
+$(ODIR):
+	$(MKDIR_P) $(ODIR)
+	
 $(LIB): $(OBJS)
 	@$(AR) cr $@ $^
 	@echo "    Archive    $(notdir $@)"

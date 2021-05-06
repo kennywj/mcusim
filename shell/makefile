@@ -3,18 +3,24 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-ODIR = ../build
-LIB = $(ODIR)/libshell.a
+ODIR = ../build/shell
+LIB = ../build/libshell.a
 INCS = -I../include -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../FreeRTOS_Posix -I../port -I../fatfs/src -I../fatfs/port 
+	-I../FreeRTOS_Posix -I../sys_port -I../fatfs/src -I../fatfs/port 
 VPATH = .
 SRCS = cmd.c console.c parser.c
 
 OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))
-.PHONY: clean depend
 
-all: $(LIB)
+.PHONY: directories clean depend
 
+all: directories $(LIB)
+
+directories: $(ODIR)
+
+$(ODIR):
+	$(MKDIR_P) $(ODIR)
+	
 $(LIB): $(OBJS)
 	@$(AR) cr $@ $^
 	@echo "    Archive    $(notdir $@)"
