@@ -5,7 +5,7 @@
 #
 PROG = ./u2w
 
-LIB_PATH := -L./build 
+LIB_PATH := -L./build
 INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel/include	\
 	-I./port -I./FreeRTOS_Posix/Common_Demo/include/
 #
@@ -36,11 +36,12 @@ all: $(PROG)
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
+	@echo "    subdir $@"
 	$(MAKE) -C $@
 
-$(PROG): $(SRCS) subdirs 
+$(PROG): $(SRCS) subdirs
 	$(CC) $(CFLAGS) $(INCS) $(LIB_PATH) -Wl,-Map=$(PROG).map $< -o $@ $(LIBS)
-	@echo "    Generate Program $(notdir $(PROG)) from $^"	
-    
+	@echo "    Generate Program $(notdir $(PROG)) from $^"
+
 clean:
 	rm -rf *.o build/*.o build/*.a

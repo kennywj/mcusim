@@ -12,8 +12,6 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "ff.h"
-#include "fs_port.h"
 #include "cmd.h"
 
 extern int netif_info(char *buf, int size);

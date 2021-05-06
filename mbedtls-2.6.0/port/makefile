@@ -3,7 +3,7 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-ODIR = ./
+ODIR = .
 LIB = ../../build/libmbedtls.a
 INCS =  -I./ -I../include -I../include/mbedtls
 VPATH = ../library:../programs/test:../programs/ssl

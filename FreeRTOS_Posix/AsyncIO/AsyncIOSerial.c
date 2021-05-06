@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "AsyncIO.h"
 #include "AsyncIOSerial.h"
 /*---------------------------------------------------------------------------*/
 
