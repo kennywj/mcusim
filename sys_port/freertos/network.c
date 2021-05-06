@@ -23,7 +23,7 @@
 
 struct netif xnetif[NET_IF_NUM]; /* network interface structure */
 static ip_addr_t ipaddr, netmask, gw;
-
+extern unsigned char debug_flags;
 //
 //  function: init_netifs
 //      network interface initialize
@@ -39,6 +39,7 @@ void init_netifs(int idx)
     netif_set_default(&xnetif[idx]);
     netif_set_up(&xnetif[idx]);
 
+	debug_flags |= (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
     printf("IPV4: Host at %s ", ip4addr_ntoa(netif_ip4_addr(&xnetif[idx])));
     printf("mask %s ", ip4addr_ntoa(netif_ip4_netmask(&xnetif[idx])));
     printf("gateway %s\n", ip4addr_ntoa(netif_ip4_gw(&xnetif[idx])));

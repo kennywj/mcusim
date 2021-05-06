@@ -18,23 +18,12 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "queue.h"
-#include "semphr.h"
 #include "sys.h"
 #include "cmd.h"
 
-#include "AsyncIO/AsyncIO.h"
-#include "AsyncIO/AsyncIOSerial.h"
-
-// network interface
-#include "lwipopts.h"
-#include "lwip/err.h"
-#include "ethernetif.h"
-
-
 const char *baudstr[MAX_BAUD_NUM]= {"9600","38400","57600","115200","921600"};
 const int baudrate[MAX_BAUD_NUM]= {B9600,B38400,B57600,B115200, B921600};
-unsigned char debug_flags = (LWIP_DBG_ON|LWIP_DBG_TRACE|LWIP_DBG_STATE|LWIP_DBG_FRESH|LWIP_DBG_HALT);
+unsigned char debug_flags = 0;
 
 //
 // function: exit_u2w

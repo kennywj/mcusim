@@ -15,7 +15,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
-#include "shell.h"
 #include "sys.h"
 
 //

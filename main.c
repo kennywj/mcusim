@@ -131,7 +131,7 @@
 
 /* Priority definitions for the tasks in the demo application. */
 #define SHELL_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
-const char *software_version="uart2wifi v0.2";
+const char *software_version="mcusim v0.3";
 extern void do_console( void * pvParameters );
 extern void fs_init(void);
 extern void shell_init(void);
@@ -165,7 +165,6 @@ int main( void )
 	xTaskHandle hSysTask;
 	/* Initialise hardware and utilities. */
 	vParTestInitialise();
-//	vPrintInitialise();
     /* Create the co-routines that communicate with the tick hook. */
 	vStartHookCoRoutines();
 	// initial fs and network
@@ -193,4 +192,5 @@ void vApplicationIdleHook( void )
 		nanosleep( &xTimeToSleep, &xTimeSlept );
 #endif
 }
+
 /*-----------------------------------------------------------*/
