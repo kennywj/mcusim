@@ -3,7 +3,7 @@
 # 'make' to rebuild object codes
 # 'make clean' remove object files
 #
-PROG = ./u2w
+PROG = ./mcusim
 
 LIB_PATH := -L./build
 INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel/include	\
@@ -44,4 +44,4 @@ $(PROG): $(SRCS) subdirs
 	@echo "    Generate Program $(notdir $(PROG)) from $^"
 
 clean:
-	rm -rf *.o build/*.o build/*.a
+	rm -rf build/*
