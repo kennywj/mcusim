@@ -6,7 +6,7 @@
 ODIR = ../build/fatfs
 LIB = ../build/libfatfs.a
 INCS =  -I./src -I./port -I./src/option -I../include -I../FreeRTOS_Posix    \
-    -I../FreeRTOS_Posix/FreeRTOS_Kernel/include -I../sys_port -I../shell
+    -I../FreeRTOS_Posix/FreeRTOS_Kernel/include -I../lwip_port -I../shell
 VPATH = ./src:./src/option:./port
 	
 SRCS = diskio.c ff.c cc950.c syscall.c unicode.c    \

@@ -7,7 +7,7 @@ PROG = ./mcusim
 
 LIB_PATH := -L./build
 INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel/include	\
-	-I./sys_port -I./FreeRTOS_Posix/Common_Demo/include/
+	-I./lwip_port -I./FreeRTOS_Posix/Common_Demo/include/
 #
 # p.s the link order of library has depenendce, not change
 #
@@ -28,7 +28,7 @@ export CC LD AR CFLAGS LDFLAGS MKDIR_P
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c, %.o, $(SRCS))
 
-SUBDIRS = app sys shell FreeRTOS_Posix fatfs sys_port esp8266 mbedtls-2.6.0/port kilo coremark_port
+SUBDIRS = app sys shell FreeRTOS_Posix fatfs lwip_port esp8266 mbedtls-2.6.0/port kilo coremark_port
 
 .PHONY: subdirs $(SUBDIRS) clean all $(CLEANSUBDIRS)
 
