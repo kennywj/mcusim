@@ -31,6 +31,7 @@ char args[MAX_ARGS + 1][65];
 // history buffer
 char history[MAX_HISTORY][MAX_CMDLEN+1];
 int history_id=0;
+const char *prompt ="ble";
 
 struct termios saved_attributes;
 int do_exit =0;
@@ -208,7 +209,7 @@ void do_console(void *parm)
 {
     int ret,count=0,multi_keys=0;
     char cmdbuf[MAX_CMDLEN+1]={0},*cmd, ch;
-    char str[256];
+	//char str[256];
 
     // set stdin select, initial STDIN
     set_input_mode();
@@ -226,9 +227,9 @@ void do_console(void *parm)
         printf("registry rx callback fail\n");
         goto end_console;
     }
-    fs_getcwd(str, sizeof str /sizeof *str);
-    printf("%s>",str);      // prompt
-    fflush(stdout);
+    //fs_getcwd(str, sizeof str /sizeof *str);
+    printf("%s>",prompt);      // prompt
+    //fflush(stdout);
     // process service protocol
     while (1)
     {
@@ -258,8 +259,8 @@ void do_console(void *parm)
 			    memset(cmdbuf,0,MAX_CMDLEN);
 			    count=0;
 			    multi_keys=0;
-				fs_getcwd(str, sizeof str /sizeof *str);
-   			    printf("%s>",str);      // prompt
+				//fs_getcwd(str, sizeof str /sizeof *str);
+   			    printf("%s>",prompt);      // prompt
 		    }
 		    else
 		    {    

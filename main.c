@@ -148,12 +148,6 @@ extern void app_init(void);
 void do_init(void *parm)
 {
 	printf("\n### start init... ###\n");
-	// initial File system
-	fs_init();
-	// initial network protocol stack
-	LwIP_Init();
-	// application initial
-	app_init();
 	
 	printf("### end init ###\n");
     vTaskDelete(NULL);

@@ -30,7 +30,7 @@ unsigned char debug_flags = 0;
 //
 void exit_u2w()
 {
-	link_control(0);	// force ppp off
+	//link_control(0);	// force ppp off
 }
 
 
