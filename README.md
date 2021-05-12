@@ -1,4 +1,4 @@
-# MCU simulator
+# MCU simulator for BLE
 The project ported the FreeRTOS simulator, integrated lwip, fatfs, mbedtls, etc, to simulate the MCU environment. It can use the serial port/PPP protocol to connect to a remote PPP server, and then access the Internet. For testing purposes, some applications are also integrated in the project.
 
 git clone --recursive https://github.com/kennywj/mcusim.git
