@@ -5,7 +5,7 @@
 #
 ODIR = ../build/freertos
 LIB = ../build/libfreertos.a
-INCS =  -I./ -I./AsyncIO -I./FreeRTOS_Kernel/include -I../lwip_port  \
+INCS =  -I./ -I./AsyncIO -I./FreeRTOS_Kernel/include -I../sys  \
 	-I./Common_Demo/include
 VPATH = .:./AsyncIO:./FileIO:./FreeRTOS_Kernel:./FreeRTOS_Kernel/portable/GCC/Posix:	\
 	./FreeRTOS_Kernel/portable/MemMang:./Common_Demo/Minimal:./ParTest

@@ -6,7 +6,7 @@
 ODIR = ../build/shell
 LIB = ../build/libshell.a
 INCS = -I../include -I../FreeRTOS_Posix -I../FreeRTOS_Posix/FreeRTOS_Kernel/include \
-	-I../FreeRTOS_Posix -I../lwip_port -I../fatfs/src -I../fatfs/port 
+	-I../FreeRTOS_Posix -I../sys
 VPATH = .
 SRCS = cmd.c console.c parser.c
 

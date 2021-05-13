@@ -20,9 +20,16 @@ struct cmd_tbl commands[]=
 	{"quit",    cmd_quit, "exit this program",                  ""},
 	{"sys",     cmd_sys,  "display system information and status",""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
+	{"ble",     cmd_ble,  "BLE LL control commands",            ""},
 	{NULL,        NULL}
 };
 
+/**
+  * @brief  display help meesage of commands
+  * @param  number of arguments
+  *	@param  arguments array
+  * @retval None
+  */
 void cmd_help(int argc, char* argv[])
 {
     struct cmd_tbl  *p = &commands[0];
@@ -49,13 +56,12 @@ void cmd_help(int argc, char* argv[])
 	}
 }
 
-//
-//  function: cmd_quit
-//      exit the tunnel server daemon
-//  parameters
-//      argc:   1
-//      argv:   none
-//
+/**
+  * @brief  quit simulator system
+  * @param  number of arguments
+  *	@param  arguments array
+  * @retval None
+  */
 void cmd_quit(int argc, char* argv[])
 {
     extern int do_exit;

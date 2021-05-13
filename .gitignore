@@ -1,5 +1,5 @@
 *.o
 *.d
-mcusim
+blesim
 *.map
 *.a
