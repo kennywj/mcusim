@@ -228,7 +228,7 @@ void do_console(void *parm)
         goto end_console;
     }
     //fs_getcwd(str, sizeof str /sizeof *str);
-    printf("%s>",prompt);      // prompt
+    printf("%s$",prompt);      // prompt
     //fflush(stdout);
     // process service protocol
     while (1)
@@ -260,7 +260,7 @@ void do_console(void *parm)
 			    count=0;
 			    multi_keys=0;
 				//fs_getcwd(str, sizeof str /sizeof *str);
-   			    printf("%s>",prompt);      // prompt
+   			    printf("%s$",prompt);      // prompt
 		    }
 		    else
 		    {    

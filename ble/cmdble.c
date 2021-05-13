@@ -6,17 +6,25 @@
 #include "sys.h"
 #include "cmd.h"
 #include "vphy.h"
+
+static const char *Usage = 	"enable VPHY: $vphy on\n"
+							"disable VPHY: $vphy off\n"
+							"program physical device: $vphy -d <device name>\n"
+							"transmit data: $vphy -x <message string>\n"
+							"display help: $vphy -h\n"
+							"display VPH status: $vphy\n";
+
 /**
   * @brief  BLE LL control commands
   * @param  number of arguments
   *	@param  arguments array
   * @retval None
   */
-void cmd_ble(int argc, char* argv[])
+void cmd_vphy(int argc, char* argv[])
 {
 	int c;
 	char buf[256];
-	
+	static void (*recv_handler)(char *, int len) = NULL;
 	while(1)
 	{
 		static struct option ble_options[] =
@@ -32,7 +40,7 @@ void cmd_ble(int argc, char* argv[])
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long (argc, argv, "hedp:x:",
+		c = getopt_long (argc, argv, "hd:x:",
                        ble_options, &option_index);
 
       /* Detect the end of the options. */
@@ -41,26 +49,28 @@ void cmd_ble(int argc, char* argv[])
 
 		switch (c)
 		{
-			case 'e':
-				vphy_init(NULL);
-			break;
 			case 'd':
-				vphy_exit();
-			break;
-			case 'p':
 				vphy_ctrl(1, strlen(optarg), (char *)optarg);
 			break;
 			case 'x': // transmit PDU
 				vphy_output((char *)optarg, strlen(optarg));
 			break;
-			case 'h':
-				printf("BLE LL commands\n"
-				"Usage:-e enable VPHY, -d disable VPHY, -p <device name> physical device name\n");
-			break;
+			
 			default:
+				printf("unknown option \'%c\'\n",c);
+			case 'h':
+				printf("%s",Usage);
 			break;
 		}
 	}	// end while
+	
+	for(;optind<argc;optind++)
+	{
+		if (strcmp(argv[optind],"on")==0)
+			vphy_init(recv_handler);
+		else if (strcmp(argv[optind],"off")==0)
+			vphy_exit();
+	}
 	// show BLE LL status
 	vphy_ctrl(0, 255, buf);
 	printf("%s", buf);

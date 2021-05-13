@@ -48,7 +48,8 @@ static void vphy_receive_thread( void *pvParameters )
     xQueueHandle hSerialRxQueue = ( xQueueHandle )pvParameters;
     char data[MAX_PKT_SIZE];
 	unsigned char ch;
-    int len;
+    int len=0;
+	
     printf("Start VPHY Receive thread\n");
     while (1) {
         // repeat read data and use timeout to exit
@@ -139,15 +140,20 @@ int vphy_init(void (*handler)(char *, int len))
 int vphy_exit()
 {
 	// terminate VPHY
-	exit_vphy = 1;
-	printf("wait VPHY terminate ...\n");
-	if (xSemaphoreTake(vphy_sem, 30000)!= pdTRUE)	
-		printf("wait vphy terminate fail\n");
-	printf("Close %s!",devname);
-	lAsyncIOSerialClose(iSerialReceive);
-    iSerialReceive = 0;
-    vQueueDelete(xSerialRxQueue);
-    vphy_on = 0;
+	if (vphy_on)
+	{	
+		exit_vphy = 1;
+		printf("wait VPHY terminate ...\n");
+		if (xSemaphoreTake(vphy_sem, 30000)!= pdTRUE)	
+			printf("wait vphy terminate fail\n");
+		printf("Close %s!",devname);
+		lAsyncIOSerialClose(iSerialReceive);
+		iSerialReceive = 0;
+		vQueueDelete(xSerialRxQueue);
+		vphy_on = 0;
+	}
+	else
+		printf("VPHY not active\n");
     return 0;
 }
 

@@ -20,7 +20,7 @@ struct cmd_tbl commands[]=
 	{"quit",    cmd_quit, "exit this program",                  ""},
 	{"sys",     cmd_sys,  "display system information and status",""},
 	{"ver",     cmd_ver,  "firmware version",                   ""},
-	{"ble",     cmd_ble,  "BLE LL control commands",            ""},
+	{"vphy",    cmd_vphy,  "BLE LL control commands",            ""},
 	{NULL,        NULL}
 };
 

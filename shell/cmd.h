@@ -17,7 +17,7 @@ extern void cmd_quit(int argc, char* argv[]);
 extern void cmd_help(int argc, char* argv[]);
 extern void cmd_sys(int argc, char* argv[]);
 extern void cmd_ver(int argc, char* argv[]);
-extern void cmd_ble(int argc, char* argv[]);
+extern void cmd_vphy(int argc, char* argv[]);
 
 extern void dump_frame(char *frame, int len, const char * fmt, ...);
 #endif
