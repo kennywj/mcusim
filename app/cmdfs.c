@@ -134,7 +134,7 @@ void cmd_dir(int argc, char* argv[])
 //
 void cmd_touch(int argc, char* argv[])
 {
-    int i,res;
+    int i;
     int bw;    // bytes writed
     int fd;
     char path[64]={0};
@@ -150,10 +150,10 @@ void cmd_touch(int argc, char* argv[])
                 bw = fs_write(fd,argv[i],strlen(argv[i]));
                 if ( bw < strlen(argv[i]) )
                 {
-                    printf("write error %d\n",res);
+                    printf("write error %d\n",bw);
                     break;
                 }
-            } 
+            }
         }
         else if (fd == -FR_EXIST)
             printf("create: cannot create file '%s' , File exists. \r\n",path);
@@ -325,7 +325,6 @@ void cmd_pwd(int argc, char* argv[])
 void cmd_rename(int argc, char* argv[])
 {
     int res;
-    char path[512]={0};
     
     if (argc > 2)
     {
@@ -522,7 +521,7 @@ void cmd_cat(int argc, char* argv[])
     int res;
     int df,sf;
     int c, overwrite=0,binary =0;
-    int rlen,wlen,size;
+    int rlen,wlen;
     char *src=NULL, *dest=NULL;
     char *buf=NULL;
     

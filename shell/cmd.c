@@ -57,6 +57,7 @@ struct cmd_tbl commands[]=
 	{"selftest", cmd_selftest, "mbedtls selt test",""},
 	{"longopt", cmd_long_options, "do long option test",""},
 	{"md5", cmd_md5, "do md5 calculate","md5 <file>"},
+	{"sha1", cmd_sha1, "do SHA1 hash digest calculate","sha1 <file>"},
 	{"fifo", cmd_fifo, "do FIFO read/write test","fifo -i <ID> -[r/w] <data>"},
 	{NULL,        NULL}
 };
