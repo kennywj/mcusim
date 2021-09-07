@@ -8,3 +8,7 @@ git clone --recursive https://github.com/kennywj/mcusim.git
   $make <br>
 To execute "mcusim" will have a command line console on screen.  
 Input the "help" command will shows available commands in system.  
+
+## Use GDB to debug the program<br>
+it should disable SIGUSR1 signal<br>
+(gdb) handle SIGUSR1 noprint nostop
