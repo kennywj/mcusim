@@ -11,7 +11,7 @@ INCS = -I./include -I./sys -I./FreeRTOS_Posix -I./FreeRTOS_Posix/FreeRTOS_Kernel
 #
 # p.s the link order of library has depenendce, not change
 #
-LIBS = -lshell -lapp -lesp8266 -lsys -llwip -lmbedtls -lfreertos -lfatfs -lpthread -lcoremark -lm
+LIBS = -lshell -lapp -lesp8266 -lsys -llwip -lmbedtls -lfreertos -lfatfs -lpthread -lcoremark -lnn -lm
 
 MKDIR_P = mkdir -p
 CC = gcc
@@ -28,7 +28,7 @@ export CC LD AR CFLAGS LDFLAGS MKDIR_P
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c, %.o, $(SRCS))
 
-SUBDIRS = app sys shell FreeRTOS_Posix fatfs lwip_port esp8266 mbedtls-2.6.0/port kilo coremark_port
+SUBDIRS = app sys shell FreeRTOS_Posix fatfs lwip_port esp8266 mbedtls-2.6.0/port kilo coremark_port nn
 
 .PHONY: subdirs $(SUBDIRS) clean all $(CLEANSUBDIRS)
 

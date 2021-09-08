@@ -17,6 +17,23 @@
 #include "md5.h"
 #include "cmd.h"
 
+/**
+  * @brief  calculate md5 digest of memory contain.
+  * @param  start address of data in memory
+  * @param  length of data
+  * @param  digest 
+  * @retval None
+  */
+void md5sum(void *data, int len, unsigned char digest[16])
+{
+	mbedtls_md5_context ctx;
+	
+	mbedtls_md5_init( &ctx );
+   	mbedtls_md5_starts( &ctx );
+	mbedtls_md5_update (&ctx, (unsigned char *)data, len);
+	mbedtls_md5_finish (&ctx, digest);
+	mbedtls_md5_free( &ctx );
+}
 //=============================================================================
 //  function: cmd_md5
 //      calculate file'd md5 sum

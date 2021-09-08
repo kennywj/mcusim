@@ -17,6 +17,24 @@
 #include "sha1.h"
 #include "cmd.h"
 
+/**
+  * @brief  calculate sha1 digest of memory contain.
+  * @param  start address of data in memory
+  * @param  length of data
+  * @param  digest 
+  * @retval None
+  */
+void sha1sum(void *data, int len, unsigned char digest[20])
+{
+	mbedtls_sha1_context ctx;
+	
+	mbedtls_sha1_init( &ctx );
+	mbedtls_sha1_starts( &ctx );
+	mbedtls_sha1_update( &ctx, (unsigned char *)data, len);
+	mbedtls_sha1_finish( &ctx, digest );
+	mbedtls_sha1_free( &ctx );
+}
+
 //=============================================================================
 //  function: cmd_sha1
 //      calculate file'd sha1 hash digest
