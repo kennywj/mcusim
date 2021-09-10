@@ -24,8 +24,10 @@
   * @param  digest 
   * @retval None
   */
-void sha1sum(void *data, int len, unsigned char digest[20])
+void sha1sum(const char *name, void *data, int len, unsigned char digest[20])
 {
+	int i;
+	
 	mbedtls_sha1_context ctx;
 	
 	mbedtls_sha1_init( &ctx );
@@ -33,6 +35,15 @@ void sha1sum(void *data, int len, unsigned char digest[20])
 	mbedtls_sha1_update( &ctx, (unsigned char *)data, len);
 	mbedtls_sha1_finish( &ctx, digest );
 	mbedtls_sha1_free( &ctx );
+	
+	if (name)
+	{	
+		printf("%8s, size %8d, digest= ",name, len);
+		for(i=0;i<20;i++)
+			printf("%02x", digest[i]);
+		printf("\n");
+		fflush(stdout); /* force dot to print on buffered machines */
+	}
 }
 
 //=============================================================================

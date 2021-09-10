@@ -24,8 +24,10 @@
   * @param  digest 
   * @retval None
   */
-void md5sum(void *data, int len, unsigned char digest[16])
+void md5sum(const char *name, void *data, int len, unsigned char digest[16])
 {
+	int i;
+	
 	mbedtls_md5_context ctx;
 	
 	mbedtls_md5_init( &ctx );
@@ -33,7 +35,16 @@ void md5sum(void *data, int len, unsigned char digest[16])
 	mbedtls_md5_update (&ctx, (unsigned char *)data, len);
 	mbedtls_md5_finish (&ctx, digest);
 	mbedtls_md5_free( &ctx );
-}
+	
+	if (name)
+	{	
+		printf("%8s, size %8d, digest= ",name, len);
+		for(i=0;i<16;i++)
+			printf("%02x", digest[i]);
+		printf("\n");
+		fflush(stdout); /* force dot to print on buffered machines */
+	}
+}	
 //=============================================================================
 //  function: cmd_md5
 //      calculate file'd md5 sum

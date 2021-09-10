@@ -50,8 +50,10 @@ extern void cmd_md5(int argc, char* argv[]);
 extern void cmd_sha1(int argc, char* argv[]);
 extern void cmd_fifo(int argc, char* argv[]);
 extern void cmd_cifar10(int argc, char* argv[]);
+extern void cmd_pool(int argc, char* argv[]);
+
 
 extern void dump_frame(char *frame, int len, const char * fmt, ...);
-extern void md5sum(void *data, int len, unsigned char digest[16]);
-extern void sha1sum(void *data, int len, unsigned char digest[20]);
+extern void md5sum(const char *name, void *data, int len, unsigned char digest[16]);
+extern void sha1sum(const char *name, void *data, int len, unsigned char digest[20]);
 #endif
