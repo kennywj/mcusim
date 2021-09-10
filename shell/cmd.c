@@ -54,13 +54,14 @@ struct cmd_tbl commands[]=
 	{"http",    cmd_http_client,   "HTTP clinet test command",         "-u <server url> -p <server port> [on|off]"},
 	{"camera",  cmd_camera, "GP camera control",         
 		"-d <device> -b <baudrate> -x<camera command string> [on|off|getpic]"},
-	{"selftest", cmd_selftest, "mbedtls selt test",""},
-	{"longopt", cmd_long_options, "do long option test",""},
-	{"md5", cmd_md5, "do md5 calculate","md5 <file>"},
-	{"sha1", cmd_sha1, "do SHA1 hash digest calculate","sha1 <file>"},
-	{"fifo", cmd_fifo, "do FIFO read/write test","fifo -i <ID> -[r/w] <data>"},
-	{"cifar10",cmd_cifar10,"NN Demo the CIFAR 10 example"},
-	{"pool",cmd_pool,"NN pooling function test"},
+	{"selftest", 	cmd_selftest, "mbedtls selt test",""},
+	{"longopt", 	cmd_long_options, "do long option test",""},
+	{"md5", 	cmd_md5, "do md5 calculate","md5 <file>"},
+	{"sha1", 	cmd_sha1, "do SHA1 hash digest calculate","sha1 <file>"},
+	{"fifo", 	cmd_fifo, "do FIFO read/write test","fifo -i <ID> -[r/w] <data>"},
+	{"cifar10",	cmd_cifar10,"NN Demo the CIFAR10 example"},
+	{"vgg19",	cmd_vgg19,"NN Demo the VGG19 example"},
+	{"pool",	cmd_pool,"NN pooling function test"},
 	{NULL,        NULL}
 };
 

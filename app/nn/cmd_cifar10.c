@@ -118,7 +118,7 @@ static q7_t ip1_wt[IP1_DIM * IP1_OUT] = IP1_WT;
 static q7_t ip1_bias[IP1_OUT] = IP1_BIAS;
 
 /* Here the image_data should be the raw uint8 type RGB image in [RGB, RGB, RGB ... RGB] format */
-uint8_t   image_data[CONV1_IM_CH * CONV1_IM_DIM * CONV1_IM_DIM] = IMG_DATA;
+static uint8_t   image_data[CONV1_IM_CH * CONV1_IM_DIM * CONV1_IM_DIM] = IMG_DATA;
 q7_t      output_data[IP1_OUT];
 
 //vector buffer: max(im2col buffer,average pool buffer, fully connected buffer)
@@ -126,6 +126,12 @@ q7_t      col_buffer[2 * 5 * 5 * 32 * 2];
 
 q7_t      scratch_buffer[32 * 32 * 10 * 4];
 
+/**
+  * @brief  do cifar10 and calculate sha1 digest
+  * @param  argc
+  * @param  argv
+  * @retval None
+  */
 void cmd_cifar10(int argc, char* argv[])
 {
 	unsigned char digest[20];
@@ -197,6 +203,11 @@ void cmd_cifar10(int argc, char* argv[])
   
   arm_fully_connected_q7_opt(img_buffer2, ip1_wt, IP1_DIM, IP1_OUT, IP1_BIAS_LSHIFT, IP1_OUT_RSHIFT, ip1_bias,
                              output_data, (q15_t *) img_buffer1);
+
+	for (int i = 0; i < 10; i++)
+  {
+      printf("%d: %d\n", i, output_data[i]);
+  }
   sha1sum("fc",output_data, IP1_OUT, digest);
   
   arm_softmax_q7(output_data, 10, output_data);
