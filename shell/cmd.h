@@ -49,6 +49,7 @@ extern void cmd_long_options(int argc, char* argv[]);
 extern void cmd_md5(int argc, char* argv[]);
 extern void cmd_sha1(int argc, char* argv[]);
 extern void cmd_fifo(int argc, char* argv[]);
+extern void cmd_list(int argc, char* argv[]);
 extern void cmd_cifar10(int argc, char* argv[]);
 extern void cmd_pool(int argc, char* argv[]);
 extern void cmd_vgg19(int argc, char* argv[]);

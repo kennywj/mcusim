@@ -59,6 +59,7 @@ struct cmd_tbl commands[]=
 	{"md5", 	cmd_md5, "do md5 calculate","md5 <file>"},
 	{"sha1", 	cmd_sha1, "do SHA1 hash digest calculate","sha1 <file>"},
 	{"fifo", 	cmd_fifo, "do FIFO read/write test","fifo -i <ID> -[r/w] <data>"},
+	{"list", 	cmd_list, "demo how to used list APIs and macro"},
 	{"cifar10",	cmd_cifar10,"NN Demo the CIFAR10 example"},
 	{"vgg19",	cmd_vgg19,"NN Demo the VGG19 example"},
 	{"pool",	cmd_pool,"NN pooling function test"},
