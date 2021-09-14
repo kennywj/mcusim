@@ -3,7 +3,7 @@
 #include <stdlib.h>     /* malloc, free, rand */
 #include <string.h>     /* memcpy */
 #include <getopt.h>
-#include "list.h"
+#include "lists.h"
 #include "cmd.h"
 
 

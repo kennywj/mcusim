@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-message(" **** Currently path of CMakeLists = " ${CMAKE_CURRENT_SOURCE_DIR})
+#message(" **** Currently path of CMakeLists = " ${CMAKE_CURRENT_SOURCE_DIR})
 
 project(esp8266)
 

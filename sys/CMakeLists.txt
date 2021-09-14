@@ -9,4 +9,4 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/shell
 	${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(sys util.c sys.c fifo.c cmd_fifo.c)
+add_library(sys util.c sys.c fifo.c cmd_fifo.c lists.c cmd_list.c)

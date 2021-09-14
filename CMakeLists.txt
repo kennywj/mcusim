@@ -14,7 +14,8 @@ ENDIF ()
 #message("C compile options" ${CMAKE_C_FLAGS})
 
 include_directories(
-	${CMAKE_SOURCE_DIR} 
+	${CMAKE_SOURCE_DIR}
+	${CMAKE_SOURCE_DIR}/include
 	lwip_port
 	FreeRTOS_Posix
 	FreeRTOS_Posix/FreeRTOS_Kernel/include
@@ -30,8 +31,9 @@ add_subdirectory(lwip_port)
 add_subdirectory(mbedtls-2.6.0)
 add_subdirectory(app)
 add_subdirectory(esp8266)
+add_subdirectory(nn)
 
 add_executable(mcusim main.c)
 
 # duplicate add librarys like lwip rtos to solve recursive dependence issues
-target_link_libraries(mcusim shell sys app sys esp8266 fatfs lwip mbedtls rtos pthread m)
+target_link_libraries(mcusim shell sys app sys nn esp8266 fatfs lwip mbedtls rtos pthread m)
