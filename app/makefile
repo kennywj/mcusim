@@ -11,7 +11,8 @@ INCS = -I./duktape -I./http-parser -I./gnss -I./json -I../FreeRTOS_Posix -I../Fr
 VPATH = .:./duktape:./http-parser:./http-parser/contrib:./gnss:./json:./nn
 SRCS = app.c tcpecho.c ping.c  cmdnet.c cmdduktape.c duktape.c cmdfs.c http_parser.c url_parser.c \
 	parsertrace.c http_test.c tftps.c https.c pppd.c xmodem.c camera.c cmdmd5.c gnss.c minmea.c allystar.c	\
-	tiny-json.c json-maker.c cmd_json.c cmdsha1.c cmd_cifar10.c cmdpool.c vgg19_para.S cmd_vgg19.c
+	tiny-json.c json-maker.c cmd_json.c cmdsha1.c cmd_cifar10.c cmdpool.c vgg19_para.S cmd_vgg19.c	\
+	cmdpool.c test_util.c
 
 OBJS = $(patsubst %.S,$(ODIR)/%.o,$(patsubst %.cpp,$(ODIR)/%.o,$(patsubst %.c,$(ODIR)/%.o,${SRCS})))
 #OBJS = $(patsubst %.c,$(ODIR)/%.o,$(SRCS))

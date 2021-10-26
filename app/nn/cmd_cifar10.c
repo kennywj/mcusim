@@ -201,21 +201,32 @@ void cmd_cifar10(int argc, char* argv[])
                      POOL3_PADDING, POOL3_STRIDE, POOL3_OUT_DIM, col_buffer, img_buffer2);
   sha1sum("maxpool3",img_buffer2,POOL3_OUT_DIM*POOL3_OUT_DIM*CONV3_OUT_CH, digest);
   
-  arm_fully_connected_q7_opt(img_buffer2, ip1_wt, IP1_DIM, IP1_OUT, IP1_BIAS_LSHIFT, IP1_OUT_RSHIFT, ip1_bias,
+  //arm_fully_connected_q7_opt(img_buffer2, ip1_wt, IP1_DIM, IP1_OUT, IP1_BIAS_LSHIFT, IP1_OUT_RSHIFT, ip1_bias,
+  //                           output_data, (q15_t *) img_buffer1);
+							 
+  arm_fully_connected_q7(img_buffer2, ip1_wt, IP1_DIM, IP1_OUT, IP1_BIAS_LSHIFT, IP1_OUT_RSHIFT, ip1_bias,
                              output_data, (q15_t *) img_buffer1);
 
-	for (int i = 0; i < 10; i++)
+  printf("FC outout\n");
+  for (int i = 0; i < 10; i++)
   {
-      printf("%d: %d\n", i, output_data[i]);
+      printf("%d ",output_data[i]);
   }
+  printf("\n");
+  
   sha1sum("fc",output_data, IP1_OUT, digest);
   
   arm_softmax_q7(output_data, 10, output_data);
   sha1sum("softmax",output_data, 10, digest);
   
-  for (int i = 0; i < 10; i++)
-  {
-      printf("%d: %d\n", i, output_data[i]);
-  }
+    printf("class: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%3d ", i);
+    }
+    printf("\nscore: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%3d ", output_data[i]);
+    }
+    printf("\n");
 }
 // end cmd_cifar10

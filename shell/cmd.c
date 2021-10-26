@@ -62,7 +62,10 @@ struct cmd_tbl commands[]=
 	{"list", 	cmd_list, "demo how to used list APIs and macro"},
 	{"cifar10",	cmd_cifar10,"NN Demo the CIFAR10 example"},
 	{"vgg19",	cmd_vgg19,"NN Demo the VGG19 example"},
-	{"pool",	cmd_pool,"NN pooling function test"},
+	{"maxpool",	cmd_pool,"NN max pooling function test","Do max pooling API verify.\n"
+		"$ maxpool [options] [<input dim> <channel> <kernel dim> <pad number> <stride number>]\n"
+		"For example, input feature map 5x5, channel 1, maxpool kernel 2x2, pad 0, stride 1\n"
+		"$ maxpool 5 1 2 0 1\n"},
 	{NULL,        NULL}
 };
 

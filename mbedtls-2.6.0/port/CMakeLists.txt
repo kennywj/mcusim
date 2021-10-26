@@ -10,4 +10,5 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -DU2W_SIM -DMBEDTLS_CONFIG_FILE='<u2w_
 # Create a library called "port" which includes the source file "hello.cxx".
 # The extension is already found. Any number of sources could be listed here.
 add_library (tlstest STATIC 
-	${CMAKE_SOURCE_DIR}/mbedtls-2.6.0/programs/test/selftest.c)
+	${CMAKE_SOURCE_DIR}/mbedtls-2.6.0/programs/test/selftest.c
+	${CMAKE_SOURCE_DIR}/mbedtls-2.6.0/programs/ssl/ssl_client1.c)
